@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export function useCamera({ width = 1280, height = 720, facingMode = 'user' } = {}) {
   const videoRef = useRef(null)
@@ -44,23 +44,42 @@ export function useCamera({ width = 1280, height = 720, facingMode = 'user' } = 
     }
   }, [width, height, facingMode])
 
-  function capture() {
+  const capture = useCallback(({ aspectRatio } = {}) => {
     const video = videoRef.current
     if (!video || video.readyState < 2) return null
 
+    const vw = video.videoWidth
+    const vh = video.videoHeight
+
+    let sx = 0
+    let sy = 0
+    let sw = vw
+    let sh = vh
+
+    if (aspectRatio) {
+      const videoRatio = vw / vh
+      if (videoRatio > aspectRatio) {
+        sw = Math.round(vh * aspectRatio)
+        sx = Math.round((vw - sw) / 2)
+      } else if (videoRatio < aspectRatio) {
+        sh = Math.round(vw / aspectRatio)
+        sy = Math.round((vh - sh) / 2)
+      }
+    }
+
     const canvas = document.createElement('canvas')
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
+    canvas.width = sw
+    canvas.height = sh
     const ctx = canvas.getContext('2d')
 
-    ctx.translate(canvas.width, 0)
+    ctx.translate(sw, 0)
     ctx.scale(-1, 1)
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh)
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92)
     })
-  }
+  }, [])
 
   return { videoRef, status, error, capture }
 }
