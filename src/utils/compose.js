@@ -13,7 +13,12 @@ const FOOTER_Y =
     (PHOTO_SLOT.paddingTop + 4 * PHOTO_SLOT.height + 3 * PHOTO_SLOT.gap)) /
     2
 
-export async function composeFrame({ frame, photoBlobs, filterCss }) {
+export async function composeFrame({
+  frame,
+  photoBlobs,
+  filterCss,
+  overlays = [],
+}) {
   const canvas = document.createElement('canvas')
   canvas.width = FRAME_WIDTH
   canvas.height = FRAME_HEIGHT
@@ -22,7 +27,12 @@ export async function composeFrame({ frame, photoBlobs, filterCss }) {
   ctx.fillStyle = frame.backgroundColor
   ctx.fillRect(0, 0, FRAME_WIDTH, FRAME_HEIGHT)
 
-  const images = await Promise.all(photoBlobs.map(loadBlobAsImage))
+  const [images, overlayImages] = await Promise.all([
+    Promise.all(photoBlobs.map(loadBlobAsImage)),
+    Promise.all(
+      overlays.map((o) => (o?.src ? loadImageFromSrc(o.src) : null)),
+    ),
+  ])
   const slots = getSlotPositions()
 
   for (let i = 0; i < slots.length; i++) {
@@ -31,8 +41,26 @@ export async function composeFrame({ frame, photoBlobs, filterCss }) {
     if (!img) continue
 
     ctx.save()
+    ctx.beginPath()
+    ctx.rect(slot.x, slot.y, slot.width, slot.height)
+    ctx.clip()
+
     ctx.filter = filterCss && filterCss !== 'none' ? filterCss : 'none'
     drawImageCover(ctx, img, slot.x, slot.y, slot.width, slot.height)
+    ctx.filter = 'none'
+
+    const overlayImg = overlayImages[i]
+    const overlayData = overlays[i]
+    if (overlayImg && overlayData) {
+      const oh = overlayData.height * slot.height
+      const ow = oh * (overlayImg.width / overlayImg.height)
+      const ox =
+        slot.x + slot.width - ow - overlayData.right * slot.width
+      const oy =
+        slot.y + slot.height - oh - overlayData.bottom * slot.height
+      ctx.drawImage(overlayImg, ox, oy, ow, oh)
+    }
+
     ctx.restore()
   }
 
@@ -63,6 +91,15 @@ function loadBlobAsImage(blob) {
       reject(e)
     }
     img.src = url
+  })
+}
+
+function loadImageFromSrc(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
   })
 }
 

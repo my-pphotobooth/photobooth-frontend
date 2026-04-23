@@ -21,6 +21,22 @@ export function getSlotPositions() {
   return positions
 }
 
+const WITH_ME_POSES = [
+  '/me/1.png',
+  '/me/2.png',
+  '/me/3.png',
+  '/me/4.png',
+]
+
+const WITH_ME_POSITION = { right: 0, bottom: 0, height: 0.8 }
+
+function buildWithMeOverlays(poses, shotCount = 8) {
+  return Array.from({ length: shotCount }, (_, i) => ({
+    src: poses[i % poses.length],
+    ...WITH_ME_POSITION,
+  }))
+}
+
 export const frames = [
   {
     id: 'basic-white',
@@ -37,6 +53,15 @@ export const frames = [
     backgroundColor: '#18181b',
     textColor: '#f4f4f5',
     footerText: 'my-photobooth',
+  },
+  {
+    id: 'with-me',
+    name: 'with me',
+    type: 'with-me',
+    backgroundColor: '#ffffff',
+    textColor: '#1f2937',
+    footerText: 'my-photobooth',
+    overlays: buildWithMeOverlays(WITH_ME_POSES),
   },
 ]
 

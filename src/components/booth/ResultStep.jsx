@@ -18,10 +18,14 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
         const selectedBlobs = editResult.selectedIndices.map(
           (i) => photos[i],
         )
+        const selectedOverlays = editResult.selectedIndices.map(
+          (i) => frame.overlays?.[i] ?? null,
+        )
         const filter = getFilterById(editResult.filterId)
         const blob = await composeFrame({
           frame,
           photoBlobs: selectedBlobs,
+          overlays: selectedOverlays,
           filterCss: filter.css,
         })
         if (cancelled) return

@@ -1,4 +1,9 @@
-export default function PreviewStrip({ frame, photoUrls = [], filterCss = 'none' }) {
+export default function PreviewStrip({
+  frame,
+  photoUrls = [],
+  overlays = [],
+  filterCss = 'none',
+}) {
   const slots = [0, 1, 2, 3]
   return (
     <div
@@ -9,7 +14,7 @@ export default function PreviewStrip({ frame, photoUrls = [], filterCss = 'none'
         {slots.map((i) => (
           <div
             key={i}
-            className="aspect-4/3 w-full overflow-hidden rounded-sm"
+            className="relative aspect-4/3 w-full overflow-hidden rounded-sm"
             style={{
               backgroundColor:
                 frame.backgroundColor === '#ffffff' ? '#e5e7eb' : '#3f3f46',
@@ -19,8 +24,21 @@ export default function PreviewStrip({ frame, photoUrls = [], filterCss = 'none'
               <img
                 src={photoUrls[i]}
                 alt=""
-                className="h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
                 style={{ filter: filterCss }}
+              />
+            )}
+            {overlays[i] && (
+              <img
+                src={overlays[i].src}
+                alt=""
+                draggable="false"
+                className="pointer-events-none absolute w-auto"
+                style={{
+                  right: `${overlays[i].right * 100}%`,
+                  bottom: `${overlays[i].bottom * 100}%`,
+                  height: `${overlays[i].height * 100}%`,
+                }}
               />
             )}
           </div>

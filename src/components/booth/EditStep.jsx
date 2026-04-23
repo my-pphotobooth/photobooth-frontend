@@ -13,6 +13,9 @@ export default function EditStep({ frame, photos, onDone }) {
 
   const filter = getFilterById(filterId)
   const previewUrls = selectedIndices.map((i) => photoUrls[i])
+  const previewOverlays = selectedIndices.map(
+    (i) => frame.overlays?.[i],
+  )
   const canProceed = selectedIndices.length === 4
 
   function toggle(index) {
@@ -51,6 +54,7 @@ export default function EditStep({ frame, photos, onDone }) {
           <PreviewStrip
             frame={frame}
             photoUrls={previewUrls}
+            overlays={previewOverlays}
             filterCss={filter.css}
           />
         </div>
@@ -58,6 +62,7 @@ export default function EditStep({ frame, photos, onDone }) {
         <div className="flex-1">
           <PhotoGrid
             urls={photoUrls}
+            frame={frame}
             selectedIndices={selectedIndices}
             onToggle={toggle}
             filterCss={filter.css}
@@ -80,12 +85,13 @@ export default function EditStep({ frame, photos, onDone }) {
   )
 }
 
-function PhotoGrid({ urls, selectedIndices, onToggle, filterCss }) {
+function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
   return (
     <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
       {urls.map((url, i) => {
         const order = selectedIndices.indexOf(i)
         const isSelected = order !== -1
+        const overlay = frame?.overlays?.[i]
         return (
           <button
             key={i}
@@ -99,9 +105,22 @@ function PhotoGrid({ urls, selectedIndices, onToggle, filterCss }) {
             <img
               src={url}
               alt=""
-              className="h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
               style={{ filter: filterCss }}
             />
+            {overlay && (
+              <img
+                src={overlay.src}
+                alt=""
+                draggable="false"
+                className="pointer-events-none absolute w-auto"
+                style={{
+                  right: `${overlay.right * 100}%`,
+                  bottom: `${overlay.bottom * 100}%`,
+                  height: `${overlay.height * 100}%`,
+                }}
+              />
+            )}
             {isSelected && (
               <div className="absolute inset-0 bg-black/20" />
             )}

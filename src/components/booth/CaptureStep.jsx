@@ -86,6 +86,20 @@ export default function CaptureStep({ frame, onDone }) {
             className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
           />
 
+          {frame?.type === 'with-me' && frame.overlays?.[shotIndex] && (
+            <img
+              src={frame.overlays[shotIndex].src}
+              alt=""
+              draggable="false"
+              className="pointer-events-none absolute w-auto"
+              style={{
+                right: `${frame.overlays[shotIndex].right * 100}%`,
+                bottom: `${frame.overlays[shotIndex].bottom * 100}%`,
+                height: `${frame.overlays[shotIndex].height * 100}%`,
+              }}
+            />
+          )}
+
           {status === 'requesting' && (
             <Overlay>카메라를 준비 중이에요…</Overlay>
           )}
