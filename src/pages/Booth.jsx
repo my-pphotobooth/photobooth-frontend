@@ -4,6 +4,7 @@ import WelcomeStep from '../components/booth/WelcomeStep'
 import FrameSelectStep from '../components/booth/FrameSelectStep'
 import CaptureStep from '../components/booth/CaptureStep'
 import EditStep from '../components/booth/EditStep'
+import ResultStep from '../components/booth/ResultStep'
 
 const STEP_LABEL = {
   welcome: '시작',
@@ -75,29 +76,15 @@ export default function Booth() {
             />
           )}
           {step === 'result' && (
-            <TempStep
-              title="결과 단계 (Day 5 예정)"
-              detail={`프레임: ${selectedFrame?.name} · 필터: ${editResult?.filterId} · 선택: ${editResult?.selectedIndices.join(', ')}`}
-              onBack={handleReset}
+            <ResultStep
+              frame={selectedFrame}
+              photos={photos}
+              editResult={editResult}
+              onReset={handleReset}
             />
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-function TempStep({ title, detail, onBack }) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-4 text-center text-neutral-500">
-      <h2 className="text-2xl font-medium text-neutral-800">{title}</h2>
-      <p>{detail}</p>
-      <button
-        onClick={onBack}
-        className="mt-4 rounded-xl bg-neutral-900 px-6 py-2 text-sm text-white hover:bg-neutral-800"
-      >
-        처음으로
-      </button>
     </div>
   )
 }
