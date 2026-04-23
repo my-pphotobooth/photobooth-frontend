@@ -1,21 +1,106 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { fetchPhotos } from '../api/photos'
+import WallPhoto from '../components/wall/WallPhoto'
+import PhotoModal from '../components/wall/PhotoModal'
 
 export default function Wall() {
+  const [photos, setPhotos] = useState([])
+  const [status, setStatus] = useState('loading')
+  const [selectedPhoto, setSelectedPhoto] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const result = await fetchPhotos()
+        if (cancelled) return
+        setPhotos(result)
+        setStatus('ready')
+      } catch (err) {
+        if (cancelled) return
+        console.error(err)
+        setStatus('error')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   return (
-    <div className="min-h-screen bg-amber-50 px-6 py-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 flex items-center justify-between">
-          <Link to="/" className="text-sm text-neutral-600 hover:text-neutral-900">
-            ← 홈으로
+    <div className="min-h-screen bg-amber-50 px-6 py-6 sm:py-10">
+      <div
+        className="pointer-events-none fixed inset-0 opacity-30"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.8 0 0 0 0 0.75 0 0 0 0 0.6 0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+        }}
+      />
+
+      <div className="relative mx-auto max-w-5xl">
+        <header className="mb-8 flex items-center justify-between sm:mb-12">
+          <Link
+            to="/"
+            className="text-sm text-neutral-600 hover:text-neutral-900"
+          >
+            ← 홈
           </Link>
-          <h1 className="text-2xl font-bold text-neutral-900">벽</h1>
-          <div className="w-16" />
+          <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">벽</h1>
+          <Link
+            to="/booth"
+            className="text-sm text-neutral-600 hover:text-neutral-900"
+          >
+            찍으러 가기 →
+          </Link>
         </header>
 
-        <div className="rounded-lg bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%224%22 height=%224%22><rect width=%224%22 height=%224%22 fill=%22%23f5efe0%22/></svg>')] p-10 text-center text-neutral-500">
-          (사진이 여기에 붙을 예정)
-        </div>
+        {status === 'loading' && (
+          <div className="py-20 text-center text-sm text-neutral-500">
+            불러오는 중…
+          </div>
+        )}
+
+        {status === 'error' && (
+          <div className="py-20 text-center text-sm text-red-600">
+            사진을 불러오지 못했어요
+          </div>
+        )}
+
+        {status === 'ready' && photos.length === 0 && (
+          <div className="flex flex-col items-center gap-4 py-20 text-center">
+            <div className="text-5xl">🖼️</div>
+            <p className="text-neutral-600">
+              아직 벽에 붙여진 사진이 없어요
+            </p>
+            <Link
+              to="/booth"
+              className="mt-2 rounded-xl bg-neutral-900 px-6 py-2.5 text-sm text-white hover:bg-neutral-800"
+            >
+              첫 사진 찍기
+            </Link>
+          </div>
+        )}
+
+        {status === 'ready' && photos.length > 0 && (
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-12 lg:grid-cols-4">
+            {photos.map((photo) => (
+              <WallPhoto
+                key={photo.id}
+                photo={photo}
+                onClick={() => setSelectedPhoto(photo)}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      {selectedPhoto && (
+        <PhotoModal
+          photo={selectedPhoto}
+          onClose={() => setSelectedPhoto(null)}
+        />
+      )}
     </div>
   )
 }

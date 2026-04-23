@@ -1,0 +1,41 @@
+import { useEffect } from 'react'
+
+export default function PhotoModal({ photo, onClose }) {
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [onClose])
+
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex max-h-[90vh] w-full max-w-xs flex-col items-center gap-4 sm:max-w-sm"
+      >
+        <img
+          src={photo.url}
+          alt=""
+          draggable="false"
+          className="max-h-[80vh] w-auto rounded-md shadow-2xl"
+        />
+        <button
+          onClick={onClose}
+          className="rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white shadow hover:bg-neutral-700"
+        >
+          닫기
+        </button>
+      </div>
+    </div>
+  )
+}
