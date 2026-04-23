@@ -68,3 +68,28 @@ export const frames = [
 export function getFrameById(id) {
   return frames.find((f) => f.id === id) ?? null
 }
+
+// availableFrom / availableUntil은 ISO 형식 문자열 (YYYY-MM-DD 또는 전체 ISO).
+// availableFrom: 해당 시각부터 노출 (포함)
+// availableUntil: 해당 시각까지 노출 (포함)
+// 둘 다 없으면 항상 노출.
+//
+// 시즌 프레임 예시:
+//   { id: 'with-me-summer', ...,
+//     availableFrom: '2026-06-01',
+//     availableUntil: '2026-08-31T23:59:59' }
+export function isFrameActive(frame, now = Date.now()) {
+  if (frame.availableFrom) {
+    const from = Date.parse(frame.availableFrom)
+    if (!Number.isNaN(from) && now < from) return false
+  }
+  if (frame.availableUntil) {
+    const until = Date.parse(frame.availableUntil)
+    if (!Number.isNaN(until) && now > until) return false
+  }
+  return true
+}
+
+export function getActiveFrames(now = Date.now()) {
+  return frames.filter((f) => isFrameActive(f, now))
+}
