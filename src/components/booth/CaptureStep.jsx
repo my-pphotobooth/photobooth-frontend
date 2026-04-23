@@ -14,12 +14,6 @@ export default function CaptureStep({ frame, onDone }) {
   const [previewUrls, setPreviewUrls] = useState([])
 
   useEffect(() => {
-    return () => {
-      previewUrls.forEach((u) => URL.revokeObjectURL(u))
-    }
-  }, [previewUrls])
-
-  useEffect(() => {
     if (phase !== 'countdown') return
     if (count === 0) {
       let cancelled = false

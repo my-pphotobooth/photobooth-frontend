@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import WelcomeStep from '../components/booth/WelcomeStep'
 import FrameSelectStep from '../components/booth/FrameSelectStep'
 import CaptureStep from '../components/booth/CaptureStep'
+import EditStep from '../components/booth/EditStep'
 
 const STEP_LABEL = {
   welcome: '시작',
@@ -16,6 +17,7 @@ export default function Booth() {
   const [step, setStep] = useState('welcome')
   const [selectedFrame, setSelectedFrame] = useState(null)
   const [photos, setPhotos] = useState([])
+  const [editResult, setEditResult] = useState(null)
 
   function handleStart() {
     setStep('frame')
@@ -31,9 +33,15 @@ export default function Booth() {
     setStep('edit')
   }
 
+  function handleEditDone(result) {
+    setEditResult(result)
+    setStep('result')
+  }
+
   function handleReset() {
     setSelectedFrame(null)
     setPhotos([])
+    setEditResult(null)
     setStep('welcome')
   }
 
@@ -60,9 +68,16 @@ export default function Booth() {
             <CaptureStep frame={selectedFrame} onDone={handleCaptureDone} />
           )}
           {step === 'edit' && (
+            <EditStep
+              frame={selectedFrame}
+              photos={photos}
+              onDone={handleEditDone}
+            />
+          )}
+          {step === 'result' && (
             <TempStep
-              title="편집 단계 (Day 4 예정)"
-              detail={`촬영된 사진 ${photos.length}장 / 프레임: ${selectedFrame?.name}`}
+              title="결과 단계 (Day 5 예정)"
+              detail={`프레임: ${selectedFrame?.name} · 필터: ${editResult?.filterId} · 선택: ${editResult?.selectedIndices.join(', ')}`}
               onBack={handleReset}
             />
           )}
