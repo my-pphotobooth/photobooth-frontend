@@ -43,3 +43,23 @@ export const createFrame = (data) => jreq('POST', '/api/gangmin/frames', data)
 export const updateFrame = (id, data) =>
   jreq('PATCH', `/api/gangmin/frames/${id}`, data)
 export const deleteFrame = (id) => jreq('DELETE', `/api/gangmin/frames/${id}`)
+
+export async function uploadAdminFile(file) {
+  const fd = new FormData()
+  fd.append('file', file)
+  const res = await fetch(`${API}/api/gangmin/uploads`, {
+    method: 'POST',
+    body: fd,
+  })
+  if (!res.ok) {
+    let message = `upload failed: ${res.status}`
+    try {
+      const err = await res.json()
+      if (err?.error) message = err.error
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message)
+  }
+  return res.json()
+}

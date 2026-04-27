@@ -86,7 +86,7 @@ export default function CaptureStep({ frame, onDone }) {
             className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
           />
 
-          {frame?.type === 'with-me' && frame.overlays?.[shotIndex] && (
+          {frame?.overlays?.[shotIndex] && (
             <img
               src={frame.overlays[shotIndex].src}
               alt=""
