@@ -5,10 +5,10 @@ export default function Home() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-neutral-50 px-6 sm:gap-12">
       <header className="text-center">
         <h1 className="text-4xl font-bold tracking-tight text-neutral-900 sm:text-5xl">
-          my-photobooth
+          갱민부스
         </h1>
         <p className="mt-2 text-sm text-neutral-600 sm:mt-3 sm:text-base">
-          나만의 포토부스에 오신 걸 환영해요
+          갱민부스에 오신 걸 환영해요
         </p>
       </header>
 
