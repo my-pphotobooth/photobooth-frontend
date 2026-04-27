@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /gangmin
+Disallow: /api/
+Disallow: /uploads/
