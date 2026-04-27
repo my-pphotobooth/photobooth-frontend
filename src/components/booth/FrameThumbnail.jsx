@@ -1,6 +1,5 @@
 export default function FrameThumbnail({ frame }) {
-  const slotBg =
-    frame.backgroundColor === '#ffffff' ? '#e5e7eb' : '#3f3f46'
+  const slotBg = frame.slotColor
   const showOverlays = Array.isArray(frame.overlays) && frame.overlays.length > 0
 
   return (

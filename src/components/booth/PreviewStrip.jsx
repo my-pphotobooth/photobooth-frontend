@@ -15,10 +15,7 @@ export default function PreviewStrip({
           <div
             key={i}
             className="relative aspect-4/3 w-full overflow-hidden rounded-sm"
-            style={{
-              backgroundColor:
-                frame.backgroundColor === '#ffffff' ? '#e5e7eb' : '#3f3f46',
-            }}
+            style={{ backgroundColor: frame.slotColor }}
           >
             {photoUrls[i] && (
               <img
