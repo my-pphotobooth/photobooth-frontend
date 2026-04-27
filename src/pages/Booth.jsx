@@ -62,7 +62,7 @@ export default function Booth() {
           </span>
         </div>
 
-        <div className="min-h-120 rounded-xl bg-white p-4 sm:min-h-140 sm:rounded-2xl sm:p-8">
+        <div className="rounded-xl bg-white p-4 sm:min-h-140 sm:rounded-2xl sm:p-8">
           {step === 'welcome' && <WelcomeStep onStart={handleStart} />}
           {step === 'frame' && <FrameSelectStep onSelect={handleFrameSelected} />}
           {step === 'capture' && (
