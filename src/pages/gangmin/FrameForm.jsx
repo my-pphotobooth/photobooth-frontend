@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   createFrame,
@@ -7,6 +7,7 @@ import {
   updateFrame,
   uploadAdminFile,
 } from '../../api/gangmin'
+import { composeFrame } from '../../utils/compose'
 
 const EMPTY_FORM = {
   name: '',
@@ -116,125 +117,213 @@ export default function FrameForm({ mode }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <header className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-neutral-900">
-          {mode === 'create' ? '새 프레임' : '프레임 수정'}
-        </h1>
-      </header>
+    <div className="grid gap-4 lg:grid-cols-[1fr_240px] lg:gap-8">
+      <aside className="lg:order-2 lg:sticky lg:top-6 lg:self-start">
+        <LivePreview form={form} overlays={overlays} />
+      </aside>
 
-      {error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      <form onSubmit={handleSubmit} className="space-y-4 lg:order-1 lg:min-w-0">
+        <header className="flex items-center justify-between">
+          <h1 className="text-lg font-bold text-neutral-900">
+            {mode === 'create' ? '새 프레임' : '프레임 수정'}
+          </h1>
+        </header>
 
-      <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
-        <Field label="이름">
-          <input
-            value={form.name}
-            onChange={(e) => update('name', e.target.value)}
-            required
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-          />
-        </Field>
+        {error && (
+          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error}
+          </p>
+        )}
 
-        <Field label="카테고리">
-          <select
-            value={form.categoryId}
-            onChange={(e) => update('categoryId', e.target.value)}
-            required
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-          >
-            <option value="" disabled>
-              선택…
-            </option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+        <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
+          <Field label="이름">
+            <input
+              value={form.name}
+              onChange={(e) => update('name', e.target.value)}
+              required
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            />
+          </Field>
+
+          <Field label="카테고리">
+            <select
+              value={form.categoryId}
+              onChange={(e) => update('categoryId', e.target.value)}
+              required
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            >
+              <option value="" disabled>
+                선택…
               </option>
-            ))}
-          </select>
-        </Field>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Field label="배경색">
-            <ColorInput
-              value={form.backgroundColor}
-              onChange={(v) => update('backgroundColor', v)}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <Field label="배경색">
+              <ColorInput
+                value={form.backgroundColor}
+                onChange={(v) => update('backgroundColor', v)}
+              />
+            </Field>
+            <Field label="슬롯색">
+              <ColorInput
+                value={form.slotColor}
+                onChange={(v) => update('slotColor', v)}
+              />
+            </Field>
+            <Field label="글자색">
+              <ColorInput
+                value={form.textColor}
+                onChange={(v) => update('textColor', v)}
+              />
+            </Field>
+          </div>
+
+          <Field label="푸터 텍스트">
+            <input
+              value={form.footerText}
+              onChange={(e) => update('footerText', e.target.value)}
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             />
           </Field>
-          <Field label="슬롯색">
-            <ColorInput
-              value={form.slotColor}
-              onChange={(v) => update('slotColor', v)}
-            />
-          </Field>
-          <Field label="글자색">
-            <ColorInput
-              value={form.textColor}
-              onChange={(v) => update('textColor', v)}
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="노출 시작 (선택)">
+              <input
+                type="datetime-local"
+                value={form.availableFrom}
+                onChange={(e) => update('availableFrom', e.target.value)}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label="노출 종료 (선택)">
+              <input
+                type="datetime-local"
+                value={form.availableUntil}
+                onChange={(e) => update('availableUntil', e.target.value)}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              />
+            </Field>
+          </div>
+
+          <Field label="정렬 순서">
+            <input
+              type="number"
+              value={form.sortOrder}
+              onChange={(e) => update('sortOrder', e.target.value)}
+              className="w-32 rounded-md border border-neutral-300 px-3 py-2 text-sm"
             />
           </Field>
         </div>
 
-        <Field label="푸터 텍스트">
-          <input
-            value={form.footerText}
-            onChange={(e) => update('footerText', e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-          />
-        </Field>
+        <OverlayEditor overlays={overlays} onChange={setOverlays} />
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label="노출 시작 (선택)">
-            <input
-              type="datetime-local"
-              value={form.availableFrom}
-              onChange={(e) => update('availableFrom', e.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-            />
-          </Field>
-          <Field label="노출 종료 (선택)">
-            <input
-              type="datetime-local"
-              value={form.availableUntil}
-              onChange={(e) => update('availableUntil', e.target.value)}
-              className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-            />
-          </Field>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={saving || !form.categoryId}
+            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {saving ? '저장 중…' : '저장'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/gangmin/frames')}
+            className="rounded-md border border-neutral-300 px-4 py-2 text-sm"
+          >
+            취소
+          </button>
         </div>
-
-        <Field label="정렬 순서">
-          <input
-            type="number"
-            value={form.sortOrder}
-            onChange={(e) => update('sortOrder', e.target.value)}
-            className="w-32 rounded-md border border-neutral-300 px-3 py-2 text-sm"
-          />
-        </Field>
-      </div>
-
-      <OverlayEditor overlays={overlays} onChange={setOverlays} />
-
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={saving || !form.categoryId}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          {saving ? '저장 중…' : '저장'}
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate('/gangmin/frames')}
-          className="rounded-md border border-neutral-300 px-4 py-2 text-sm"
-        >
-          취소
-        </button>
-      </div>
-    </form>
+      </form>
+    </div>
   )
+}
+
+function LivePreview({ form, overlays }) {
+  const [url, setUrl] = useState(null)
+  const [error, setError] = useState(null)
+  const [pending, setPending] = useState(false)
+  const lastUrlRef = useRef(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setPending(true)
+    const timer = setTimeout(async () => {
+      try {
+        const photoBlobs = makeDummyPhotoBlobs(form.slotColor)
+        const blob = await composeFrame({
+          frame: {
+            backgroundColor: form.backgroundColor,
+            textColor: form.textColor,
+            footerText: form.footerText,
+          },
+          photoBlobs,
+          overlays,
+          filterCss: 'none',
+        })
+        if (cancelled) return
+        const newUrl = URL.createObjectURL(blob)
+        if (lastUrlRef.current) URL.revokeObjectURL(lastUrlRef.current)
+        lastUrlRef.current = newUrl
+        setUrl(newUrl)
+        setError(null)
+      } catch (err) {
+        if (!cancelled) setError(err?.message || '미리보기 실패')
+      } finally {
+        if (!cancelled) setPending(false)
+      }
+    }, 250)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [form, overlays])
+
+  useEffect(() => {
+    return () => {
+      if (lastUrlRef.current) URL.revokeObjectURL(lastUrlRef.current)
+    }
+  }, [])
+
+  return (
+    <section className="rounded-xl border border-neutral-200 bg-white p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-xs font-medium text-neutral-700">미리보기</h2>
+        {pending && (
+          <span className="text-[10px] text-neutral-400">렌더링 중…</span>
+        )}
+      </div>
+      <div className="flex justify-center">
+        {url ? (
+          <img
+            src={url}
+            alt=""
+            className="aspect-2/6 w-32 rounded-md bg-neutral-100 object-contain shadow-md sm:w-40 lg:w-full lg:max-w-50"
+          />
+        ) : (
+          <div className="aspect-2/6 w-32 animate-pulse rounded-md bg-neutral-100 sm:w-40 lg:w-full lg:max-w-50" />
+        )}
+      </div>
+      {error && (
+        <p className="mt-2 text-xs text-red-600 wrap-break-word">{error}</p>
+      )}
+      <p className="mt-2 text-[10px] text-neutral-400">
+        슬롯색으로 채운 더미 사진으로 합성한 결과예요.
+      </p>
+    </section>
+  )
+}
+
+function makeDummyPhotoBlobs(slotColor) {
+  return [0, 1, 2, 3].map((i) => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="${slotColor}"/><text x="400" y="380" text-anchor="middle" font-size="280" font-weight="bold" fill="rgba(0,0,0,0.12)" font-family="system-ui">${i + 1}</text></svg>`
+    return new Blob([svg], { type: 'image/svg+xml' })
+  })
 }
 
 function OverlayEditor({ overlays, onChange }) {
@@ -265,7 +354,8 @@ function OverlayEditor({ overlays, onChange }) {
       </header>
 
       <p className="text-xs text-neutral-500">
-        샷별로 슬롯 우하단에 합성되는 이미지입니다. 보통 8개 정도 (촬영 횟수 만큼) 추가합니다.
+        샷별로 슬롯 우하단에 합성되는 이미지입니다. 보통 8개 정도 (촬영 횟수
+        만큼) 추가합니다.
       </p>
 
       {overlays.length === 0 && (
@@ -388,9 +478,7 @@ function OverlayRow({
             disabled={busy}
             className="block w-full text-xs"
           />
-          {error && (
-            <p className="text-xs text-red-600">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-600">{error}</p>}
           <Slider
             label="오른쪽"
             value={overlay.right}
