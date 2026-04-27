@@ -64,7 +64,7 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
     if (!composedBlob) return
     setStatus('uploading')
     try {
-      await uploadPhoto(composedBlob)
+      await uploadPhoto(composedBlob, { frameId: frame.id })
       setStatus('uploaded')
       setTimeout(() => navigate('/wall'), 700)
     } catch (err) {

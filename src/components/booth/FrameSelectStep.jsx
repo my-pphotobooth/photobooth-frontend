@@ -1,24 +1,64 @@
-import { useMemo, useState } from 'react'
-import { getActiveFrames } from '../../data/frames'
+import { useEffect, useMemo, useState } from 'react'
+import { fetchFrames, fetchFrameCategories } from '../../api/frames'
 import FrameThumbnail from './FrameThumbnail'
 
-const CATEGORIES = [
-  { id: 'basic', label: '기본', type: 'basic' },
-  { id: 'gyeongmin', label: '경민', type: 'with-me' },
-]
-
 export default function FrameSelectStep({ onSelect }) {
-  const [categoryId, setCategoryId] = useState('basic')
+  const [categories, setCategories] = useState([])
+  const [frames, setFrames] = useState([])
+  const [status, setStatus] = useState('loading')
+  const [categoryId, setCategoryId] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
 
-  const allFrames = useMemo(() => getActiveFrames(), [])
-  const category = CATEGORIES.find((c) => c.id === categoryId)
-  const framesInCategory = allFrames.filter((f) => f.type === category.type)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [cats, frs] = await Promise.all([
+          fetchFrameCategories(),
+          fetchFrames(),
+        ])
+        if (cancelled) return
+        setCategories(cats)
+        setFrames(frs)
+        setCategoryId(cats[0]?.id ?? null)
+        setStatus('ready')
+      } catch (err) {
+        if (cancelled) return
+        console.error(err)
+        setStatus('error')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const framesInCategory = useMemo(
+    () => frames.filter((f) => f.categoryId === categoryId),
+    [frames, categoryId],
+  )
+  const category = categories.find((c) => c.id === categoryId)
   const selected = framesInCategory.find((f) => f.id === selectedId)
 
   function handleCategoryChange(id) {
     setCategoryId(id)
     setSelectedId(null)
+  }
+
+  if (status === 'loading') {
+    return (
+      <div className="flex h-full items-center justify-center text-sm text-neutral-500">
+        프레임을 불러오는 중…
+      </div>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="flex h-full items-center justify-center text-sm text-red-600">
+        프레임을 불러오지 못했어요
+      </div>
+    )
   }
 
   return (
@@ -33,7 +73,7 @@ export default function FrameSelectStep({ onSelect }) {
       </div>
 
       <div className="flex justify-center gap-2">
-        {CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const isActive = cat.id === categoryId
           return (
             <button
@@ -45,7 +85,7 @@ export default function FrameSelectStep({ onSelect }) {
                   : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-500'
               }`}
             >
-              {cat.label}
+              {cat.name}
             </button>
           )
         })}
@@ -53,7 +93,7 @@ export default function FrameSelectStep({ onSelect }) {
 
       {framesInCategory.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-sm text-neutral-500">
-          지금은 준비된 {category.label} 프레임이 없어요
+          지금은 준비된 {category?.name ?? ''} 프레임이 없어요
         </div>
       ) : (
         <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-6">
