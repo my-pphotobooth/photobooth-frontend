@@ -6,12 +6,14 @@ import {
   fetchAdminFrames,
   updateCategory,
 } from '../../api/gangmin'
+import { EmptyState, ErrorBanner, Spinner, useConfirm, useToast } from './ui'
 
 export default function Categories() {
   const [items, setItems] = useState([])
   const [frames, setFrames] = useState([])
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState(null)
+  const toast = useToast()
 
   async function reload() {
     try {
@@ -28,6 +30,10 @@ export default function Categories() {
     }
   }
 
+  useEffect(() => {
+    reload()
+  }, [])
+
   const frameCountByCategory = useMemo(() => {
     const map = new Map()
     for (const f of frames) {
@@ -36,28 +42,28 @@ export default function Categories() {
     return map
   }, [frames])
 
-  useEffect(() => {
-    reload()
-  }, [])
-
   return (
     <section className="space-y-4">
       <header className="flex items-center justify-between">
         <h1 className="text-lg font-bold text-neutral-900">카테고리</h1>
       </header>
 
-      <NewCategoryRow onCreated={reload} onError={setError} />
+      <NewCategoryRow
+        onCreated={() => {
+          toast.success('카테고리를 추가했어요')
+          reload()
+        }}
+        onError={setError}
+      />
 
       {error && (
         <ErrorBanner message={error} onDismiss={() => setError(null)} />
       )}
 
-      {status === 'loading' && (
-        <p className="text-sm text-neutral-500">불러오는 중…</p>
-      )}
+      {status === 'loading' && <Spinner />}
 
       {status === 'ready' && items.length === 0 && (
-        <p className="text-sm text-neutral-500">아직 카테고리가 없어요</p>
+        <EmptyState icon="🗂️" title="아직 카테고리가 없어요" />
       )}
 
       {status === 'ready' && items.length > 0 && (
@@ -135,6 +141,8 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
   const [name, setName] = useState(item.name)
   const [sortOrder, setSortOrder] = useState(item.sortOrder)
   const [busy, setBusy] = useState(false)
+  const toast = useToast()
+  const confirm = useConfirm()
 
   async function save() {
     if (!name.trim()) return
@@ -145,6 +153,7 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
         sortOrder: Number(sortOrder) || 0,
       })
       setEditing(false)
+      toast.success('수정했어요')
       onChanged()
     } catch (err) {
       onError(err.message)
@@ -160,10 +169,20 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
   }
 
   async function remove() {
-    if (!window.confirm(`"${item.name}" 카테고리를 삭제할까요?`)) return
+    const ok = await confirm({
+      title: '카테고리 삭제',
+      message:
+        frameCount > 0
+          ? `"${item.name}"에 프레임 ${frameCount}개가 있어요.\n삭제하려면 먼저 프레임을 옮기거나 지워야 합니다.`
+          : `"${item.name}" 카테고리를 삭제할까요?`,
+      confirmLabel: '삭제',
+      danger: true,
+    })
+    if (!ok) return
     setBusy(true)
     try {
       await deleteCategory(item.id)
+      toast.success('삭제했어요')
       onChanged()
     } catch (err) {
       onError(err.message)
@@ -233,19 +252,5 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
         </button>
       </div>
     </li>
-  )
-}
-
-function ErrorBanner({ message, onDismiss }) {
-  return (
-    <div className="flex items-center justify-between rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-      <span>{message}</span>
-      <button
-        onClick={onDismiss}
-        className="ml-2 text-red-500 hover:text-red-900"
-      >
-        ×
-      </button>
-    </div>
   )
 }

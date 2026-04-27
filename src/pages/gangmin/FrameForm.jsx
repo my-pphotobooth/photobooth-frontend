@@ -8,6 +8,7 @@ import {
   uploadAdminFile,
 } from '../../api/gangmin'
 import { composeFrame } from '../../utils/compose'
+import { Spinner, useToast } from './ui'
 
 const EMPTY_FORM = {
   name: '',
@@ -32,6 +33,7 @@ export default function FrameForm({ mode }) {
   const [status, setStatus] = useState(mode === 'edit' ? 'loading' : 'ready')
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     let cancelled = false
@@ -98,8 +100,10 @@ export default function FrameForm({ mode }) {
       }
       if (mode === 'create') {
         await createFrame(payload)
+        toast.success('프레임을 추가했어요')
       } else {
         await updateFrame(id, payload)
+        toast.success('프레임을 수정했어요')
       }
       navigate('/gangmin/frames')
     } catch (err) {
@@ -110,7 +114,7 @@ export default function FrameForm({ mode }) {
   }
 
   if (status === 'loading') {
-    return <p className="text-sm text-neutral-500">불러오는 중…</p>
+    return <Spinner />
   }
   if (status === 'error') {
     return <p className="text-sm text-red-600">{error}</p>

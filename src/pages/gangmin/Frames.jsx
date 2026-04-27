@@ -5,12 +5,15 @@ import {
   fetchAdminCategories,
   fetchAdminFrames,
 } from '../../api/gangmin'
+import { EmptyState, ErrorBanner, Spinner, useConfirm, useToast } from './ui'
 
 export default function Frames() {
   const [frames, setFrames] = useState([])
   const [categories, setCategories] = useState([])
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState(null)
+  const toast = useToast()
+  const confirm = useConfirm()
 
   async function reload() {
     try {
@@ -32,9 +35,16 @@ export default function Frames() {
   }, [])
 
   async function handleDelete(frame) {
-    if (!window.confirm(`"${frame.name}" 프레임을 삭제할까요?`)) return
+    const ok = await confirm({
+      title: '프레임 삭제',
+      message: `"${frame.name}" 프레임을 삭제할까요?`,
+      confirmLabel: '삭제',
+      danger: true,
+    })
+    if (!ok) return
     try {
       await deleteFrame(frame.id)
+      toast.success('삭제했어요')
       await reload()
     } catch (err) {
       setError(err.message)
@@ -57,18 +67,21 @@ export default function Frames() {
         <ErrorBanner message={error} onDismiss={() => setError(null)} />
       )}
 
-      {status === 'loading' && (
-        <p className="text-sm text-neutral-500">불러오는 중…</p>
-      )}
+      {status === 'loading' && <Spinner />}
 
       {status === 'ready' && categories.length === 0 && (
-        <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          먼저{' '}
-          <Link to="/gangmin/categories" className="underline">
-            카테고리
-          </Link>
-          를 만들어주세요
-        </p>
+        <EmptyState
+          icon="🗂️"
+          title="먼저 카테고리를 만들어주세요"
+          action={
+            <Link
+              to="/gangmin/categories"
+              className="mt-2 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white"
+            >
+              카테고리로 이동
+            </Link>
+          }
+        />
       )}
 
       {status === 'ready' &&
@@ -146,18 +159,4 @@ function computeStatus(frame) {
   if (from && now < from) return { label: '예정', tone: 'text-amber-600' }
   if (until && now > until) return { label: '만료', tone: 'text-neutral-400' }
   return { label: '활성', tone: 'text-emerald-600' }
-}
-
-function ErrorBanner({ message, onDismiss }) {
-  return (
-    <div className="flex items-center justify-between rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-      <span>{message}</span>
-      <button
-        onClick={onDismiss}
-        className="ml-2 text-red-500 hover:text-red-900"
-      >
-        ×
-      </button>
-    </div>
-  )
 }

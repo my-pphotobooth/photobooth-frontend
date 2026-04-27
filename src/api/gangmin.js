@@ -44,6 +44,8 @@ export const updateFrame = (id, data) =>
   jreq('PATCH', `/api/gangmin/frames/${id}`, data)
 export const deleteFrame = (id) => jreq('DELETE', `/api/gangmin/frames/${id}`)
 
+export const cleanupUploads = () => jreq('POST', '/api/gangmin/cleanup-uploads')
+
 export async function uploadAdminFile(file) {
   const fd = new FormData()
   fd.append('file', file)
