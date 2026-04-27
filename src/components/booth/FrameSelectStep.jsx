@@ -96,7 +96,7 @@ export default function FrameSelectStep({ onSelect }) {
           지금은 준비된 {category?.name ?? ''} 프레임이 없어요
         </div>
       ) : (
-        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6">
+        <div className="-mx-4 flex snap-x snap-mandatory justify-center-safe gap-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6">
           {framesInCategory.map((frame) => {
             const isSelected = frame.id === selectedId
             return (
