@@ -62,7 +62,7 @@ export default function FrameSelectStep({ onSelect }) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 sm:gap-6">
+    <div className="flex h-full flex-col gap-4 sm:gap-6">
       <div className="text-center">
         <h2 className="text-lg font-bold text-neutral-900 sm:text-2xl">
           프레임 선택
@@ -96,22 +96,20 @@ export default function FrameSelectStep({ onSelect }) {
           지금은 준비된 {category?.name ?? ''} 프레임이 없어요
         </div>
       ) : (
-        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:gap-4 sm:px-6">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6">
           {framesInCategory.map((frame) => {
             const isSelected = frame.id === selectedId
             return (
               <button
                 key={frame.id}
                 onClick={() => setSelectedId(frame.id)}
-                className={`group flex w-24 flex-none snap-center flex-col items-center gap-1.5 rounded-xl border-2 p-1.5 transition sm:w-36 sm:gap-2 sm:p-3 ${
+                className={`group flex w-24 flex-none snap-center flex-col items-center gap-2 rounded-xl border-2 p-2 transition sm:w-36 sm:p-3 ${
                   isSelected
                     ? 'border-neutral-900 bg-neutral-50'
                     : 'border-transparent hover:border-neutral-300'
                 }`}
               >
-                <div className="w-full">
-                  <FrameThumbnail frame={frame} />
-                </div>
+                <FrameThumbnail frame={frame} />
                 <span className="text-xs font-medium text-neutral-800 sm:text-sm">
                   {frame.name}
                 </span>
@@ -125,7 +123,7 @@ export default function FrameSelectStep({ onSelect }) {
         <button
           disabled={!selected}
           onClick={() => onSelect(selected)}
-          className="rounded-xl bg-neutral-900 px-10 py-2.5 text-white shadow-lg transition disabled:cursor-not-allowed disabled:bg-neutral-300 enabled:hover:bg-neutral-800 sm:py-3"
+          className="rounded-xl bg-neutral-900 px-10 py-3 text-white shadow-lg transition disabled:cursor-not-allowed disabled:bg-neutral-300 enabled:hover:bg-neutral-800"
         >
           다음
         </button>

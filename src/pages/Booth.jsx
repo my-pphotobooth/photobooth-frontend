@@ -47,9 +47,9 @@ export default function Booth() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-900 px-3 py-4 sm:px-6 sm:py-10">
-      <div className="w-full max-w-4xl rounded-2xl bg-neutral-100 p-3 shadow-2xl ring-2 ring-neutral-800 sm:rounded-3xl sm:p-8 sm:ring-8">
-        <div className="flex items-center justify-between pb-3 sm:pb-4">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-neutral-900 px-3 py-4 sm:h-dvh sm:px-6 sm:py-10">
+      <div className="w-full max-w-6xl rounded-2xl bg-neutral-100 p-3 shadow-2xl ring-2 ring-neutral-800 sm:flex sm:h-full sm:flex-col sm:rounded-3xl sm:p-8 sm:ring-8 xl:max-w-360">
+        <div className="flex shrink-0 items-center justify-between pb-3 sm:pb-4">
           <Link
             to="/"
             onClick={handleReset}
@@ -62,7 +62,7 @@ export default function Booth() {
           </span>
         </div>
 
-        <div className="rounded-xl bg-white p-4 sm:min-h-140 sm:rounded-2xl sm:p-8">
+        <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-white p-4 sm:rounded-2xl sm:p-8">
           {step === 'welcome' && <WelcomeStep onStart={handleStart} />}
           {step === 'frame' && <FrameSelectStep onSelect={handleFrameSelected} />}
           {step === 'capture' && (

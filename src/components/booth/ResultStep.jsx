@@ -76,7 +76,7 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="text-center">
+      <div className="shrink-0 text-center">
         <h2 className="text-xl font-bold text-neutral-900 sm:text-2xl">
           짜잔! 완성됐어요
         </h2>
@@ -85,22 +85,22 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 sm:flex-row sm:gap-10">
-        <div className="w-40 sm:w-56">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 sm:flex-row sm:gap-10">
+        <div className="flex min-h-0 flex-1 items-center justify-center sm:h-full sm:flex-none">
           {status === 'composing' || !composedUrl ? (
-            <div className="flex aspect-2/6 w-full items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-500">
+            <div className="flex aspect-2/6 w-32 items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-500 sm:h-full sm:w-auto sm:max-w-full">
               합성하는 중…
             </div>
           ) : (
             <img
               src={composedUrl}
               alt="완성된 포토부스 사진"
-              className="w-full rounded-lg shadow-xl"
+              className="aspect-2/6 w-32 rounded-lg object-contain shadow-xl sm:h-full sm:w-auto sm:max-w-full"
             />
           )}
         </div>
 
-        <div className="flex w-full max-w-xs flex-col gap-3 sm:w-48">
+        <div className="flex w-full max-w-xs shrink-0 flex-col gap-3 sm:w-48">
           <button
             onClick={handleDownload}
             disabled={status !== 'ready' && status !== 'uploading' && status !== 'uploaded'}

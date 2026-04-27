@@ -70,15 +70,15 @@ export default function CaptureStep({ frame, onDone }) {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between">
         <h2 className="text-lg font-bold text-neutral-900 sm:text-xl">촬영</h2>
         <span className="text-xs text-neutral-500 sm:text-sm">
           프레임: <span className="font-medium text-neutral-800">{frame?.name}</span> · {progressLabel}
         </span>
       </div>
 
-      <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-2xl bg-black">
-        <div className="relative aspect-4/3 w-full">
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 items-center justify-center">
+        <div className="relative aspect-4/3 max-h-full w-full overflow-hidden rounded-2xl bg-black">
           <video
             ref={videoRef}
             playsInline
@@ -159,7 +159,7 @@ function Overlay({ children }) {
 function PhotoStrip({ count, urls }) {
   const slots = useMemo(() => Array.from({ length: count }), [count])
   return (
-    <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-1.5 sm:max-w-none sm:grid-cols-8 sm:gap-2">
+    <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2 sm:max-w-none sm:grid-cols-8">
       {slots.map((_, i) => (
         <div
           key={i}

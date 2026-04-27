@@ -7,7 +7,7 @@ export default function PreviewStrip({
   const slots = [0, 1, 2, 3]
   return (
     <div
-      className="flex aspect-2/6 w-full flex-col justify-between rounded-md p-2 shadow-md sm:p-3"
+      className="flex aspect-2/6 w-full flex-col justify-between rounded-md p-2 shadow-md sm:p-3 lg:h-full lg:w-auto"
       style={{ backgroundColor: frame.backgroundColor }}
     >
       <div className="flex flex-col gap-1.5 sm:gap-2">

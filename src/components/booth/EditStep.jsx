@@ -39,7 +39,7 @@ export default function EditStep({ frame, photos, onDone }) {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+      <div className="flex shrink-0 flex-col sm:flex-row sm:items-baseline sm:justify-between">
         <h2 className="text-lg font-bold text-neutral-900 sm:text-xl">편집</h2>
         <span className="text-xs text-neutral-500 sm:text-sm">
           마음에 드는 4장을 순서대로 골라주세요 ·{' '}
@@ -49,8 +49,8 @@ export default function EditStep({ frame, photos, onDone }) {
         </span>
       </div>
 
-      <div className="flex gap-3 sm:gap-5">
-        <div className="w-20 shrink-0 sm:w-36">
+      <div className="flex items-stretch gap-4 lg:min-h-0 lg:flex-1">
+        <div className="w-28 shrink-0 sm:w-40 lg:h-full lg:w-auto">
           <PreviewStrip
             frame={frame}
             photoUrls={previewUrls}
@@ -59,7 +59,7 @@ export default function EditStep({ frame, photos, onDone }) {
           />
         </div>
 
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <PhotoGrid
             urls={photoUrls}
             frame={frame}
@@ -72,7 +72,7 @@ export default function EditStep({ frame, photos, onDone }) {
 
       <FilterTabs selectedId={filterId} onSelect={setFilterId} />
 
-      <div className="flex justify-center pt-2">
+      <div className="flex shrink-0 justify-center">
         <button
           onClick={handleNext}
           disabled={!canProceed}
@@ -87,7 +87,7 @@ export default function EditStep({ frame, photos, onDone }) {
 
 function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
   return (
-    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:h-full lg:auto-cols-max lg:grid-cols-none lg:grid-flow-col lg:grid-rows-2 lg:gap-3 lg:overflow-x-auto lg:pb-1">
       {urls.map((url, i) => {
         const order = selectedIndices.indexOf(i)
         const isSelected = order !== -1
@@ -96,7 +96,7 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
           <button
             key={i}
             onClick={() => onToggle(i)}
-            className={`relative aspect-4/3 overflow-hidden rounded-md border-2 transition ${
+            className={`relative aspect-4/3 overflow-hidden rounded-md border-2 transition lg:h-full lg:w-auto ${
               isSelected
                 ? 'border-neutral-900'
                 : 'border-transparent hover:border-neutral-300'
@@ -125,7 +125,7 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
               <div className="absolute inset-0 bg-black/20" />
             )}
             {isSelected && (
-              <div className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-900 text-[10px] font-bold text-white sm:h-6 sm:w-6 sm:text-xs">
+              <div className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
                 {order + 1}
               </div>
             )}
@@ -138,7 +138,7 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
 
 function FilterTabs({ selectedId, onSelect }) {
   return (
-    <div className="-mx-2 flex gap-1.5 overflow-x-auto px-2 py-1 sm:gap-2">
+    <div className="-mx-2 flex shrink-0 gap-2 overflow-x-auto px-2 py-1">
       {filters.map((f) => {
         const isSelected = f.id === selectedId
         return (
