@@ -1,8 +1,19 @@
 import { useEffect } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import {
+  Link,
+  NavLink,
+  Navigate,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
+import { getToken, logout } from '../../api/gangmin'
 import { ConfirmProvider, ToastProvider } from './ui'
 
 export default function GangminLayout() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
   useEffect(() => {
     const meta = document.createElement('meta')
     meta.name = 'robots'
@@ -13,6 +24,17 @@ export default function GangminLayout() {
     }
   }, [])
 
+  if (!getToken()) {
+    return (
+      <Navigate to="/gangmin/login" state={{ from: location }} replace />
+    )
+  }
+
+  function handleLogout() {
+    logout()
+    navigate('/gangmin/login', { replace: true })
+  }
+
   return (
     <ToastProvider>
       <ConfirmProvider>
@@ -22,12 +44,21 @@ export default function GangminLayout() {
               <Link to="/gangmin" className="text-sm font-bold text-neutral-900">
                 관리
               </Link>
-              <Link
-                to="/"
-                className="text-xs text-neutral-500 hover:text-neutral-900"
-              >
-                ← 사이트로
-              </Link>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="text-xs text-neutral-500 hover:text-neutral-900"
+                >
+                  로그아웃
+                </button>
+                <Link
+                  to="/"
+                  className="text-xs text-neutral-500 hover:text-neutral-900"
+                >
+                  ← 사이트로
+                </Link>
+              </div>
             </div>
             <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-2">
               <Tab to="/gangmin" end>

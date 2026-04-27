@@ -3,6 +3,7 @@ import Home from './pages/Home'
 import Booth from './pages/Booth'
 import Wall from './pages/Wall'
 import GangminLayout from './pages/gangmin/Layout'
+import Login from './pages/gangmin/Login'
 import Dashboard from './pages/gangmin/Dashboard'
 import Categories from './pages/gangmin/Categories'
 import Frames from './pages/gangmin/Frames'
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/booth" element={<Booth />} />
         <Route path="/wall" element={<Wall />} />
+        <Route path="/gangmin/login" element={<Login />} />
         <Route path="/gangmin" element={<GangminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="categories" element={<Categories />} />
