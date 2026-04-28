@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { fetchPhotos } from '../api/photos'
 import WallPhoto from '../components/wall/WallPhoto'
 import PhotoModal from '../components/wall/PhotoModal'
+import { LeftArrow, RightArrow } from '../components/icons/Arrows'
 
 export default function Wall() {
   const [photos, setPhotos] = useState([])
@@ -42,16 +43,18 @@ export default function Wall() {
         <header className="mb-8 flex items-center justify-between sm:mb-12">
           <Link
             to="/"
-            className="text-sm text-neutral-600 hover:text-neutral-900"
+            className="flex items-center gap-1.5 font-handwriting text-base text-neutral-600 hover:text-neutral-900"
           >
-            ← 홈
+            <LeftArrow className="h-3 w-auto" />
+            홈
           </Link>
-          <h1 className="text-xl font-bold text-neutral-900 sm:text-2xl">벽</h1>
+          <h1 className="font-handwriting text-2xl font-bold text-neutral-900 sm:text-3xl">벽</h1>
           <Link
             to="/booth"
-            className="text-sm text-neutral-600 hover:text-neutral-900"
+            className="flex items-center gap-1.5 font-handwriting text-base text-neutral-600 hover:text-neutral-900"
           >
-            찍으러 가기 →
+            찍으러 가기
+            <RightArrow className="h-3 w-auto" />
           </Link>
         </header>
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { LeftArrow } from '../components/icons/Arrows'
 import WelcomeStep from '../components/booth/WelcomeStep'
 import FrameSelectStep from '../components/booth/FrameSelectStep'
 import CaptureStep from '../components/booth/CaptureStep'
@@ -53,9 +54,10 @@ export default function Booth() {
           <Link
             to="/"
             onClick={handleReset}
-            className="text-sm text-neutral-500 hover:text-neutral-900"
+            className="flex items-center gap-1.5 font-handwriting text-base text-neutral-500 hover:text-neutral-900"
           >
-            ← 나가기
+            <LeftArrow className="h-3 w-auto" />
+            나가기
           </Link>
           <span className="text-xs uppercase tracking-widest text-neutral-400">
             {STEP_LABEL[step]}

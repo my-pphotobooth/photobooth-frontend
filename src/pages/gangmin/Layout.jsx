@@ -8,6 +8,7 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import { getToken, logout } from '../../api/gangmin'
+import { LeftArrow } from '../../components/icons/Arrows'
 import { ConfirmProvider, ToastProvider } from './ui'
 
 export default function GangminLayout() {
@@ -54,9 +55,10 @@ export default function GangminLayout() {
                 </button>
                 <Link
                   to="/"
-                  className="text-xs text-neutral-500 hover:text-neutral-900"
+                  className="flex items-center gap-1 font-handwriting text-sm text-neutral-500 hover:text-neutral-900"
                 >
-                  ← 사이트로
+                  <LeftArrow className="h-2.5 w-auto" />
+                  사이트로
                 </Link>
               </div>
             </div>
