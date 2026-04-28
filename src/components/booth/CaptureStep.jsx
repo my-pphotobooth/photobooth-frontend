@@ -12,6 +12,7 @@ export default function CaptureStep({ frame, onDone }) {
   const [shotIndex, setShotIndex] = useState(0)
   const capturedRef = useRef([])
   const [previewUrls, setPreviewUrls] = useState([])
+  const previewUrlsRef = useRef([])
 
   useEffect(() => {
     if (phase !== 'countdown') return
@@ -21,7 +22,11 @@ export default function CaptureStep({ frame, onDone }) {
         const blob = await capture({ aspectRatio: PHOTO_ASPECT })
         if (cancelled || !blob) return
         capturedRef.current = [...capturedRef.current, blob]
-        setPreviewUrls((prev) => [...prev, URL.createObjectURL(blob)])
+        setPreviewUrls((prev) => {
+          const next = [...prev, URL.createObjectURL(blob)]
+          previewUrlsRef.current = next
+          return next
+        })
         setPhase('flash')
       })()
       return () => {
@@ -57,7 +62,15 @@ export default function CaptureStep({ frame, onDone }) {
     onDone(capturedRef.current)
   }, [phase, onDone])
 
+  useEffect(() => {
+    return () => {
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [])
+
   function handleStart() {
+    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+    previewUrlsRef.current = []
     capturedRef.current = []
     setPreviewUrls([])
     setShotIndex(0)
@@ -88,6 +101,7 @@ export default function CaptureStep({ frame, onDone }) {
 
           {frame?.overlays?.[shotIndex] && (
             <img
+              crossOrigin="anonymous"
               src={frame.overlays[shotIndex].src}
               alt=""
               draggable="false"

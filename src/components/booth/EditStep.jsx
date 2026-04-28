@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DEFAULT_FILTER_ID, filters, getFilterById } from '../../data/filters'
 import PreviewStrip from './PreviewStrip'
 
@@ -10,6 +10,12 @@ export default function EditStep({ frame, photos, onDone }) {
     () => photos.map((blob) => URL.createObjectURL(blob)),
     [photos],
   )
+
+  useEffect(() => {
+    return () => {
+      photoUrls.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [photoUrls])
 
   const filter = getFilterById(filterId)
   const previewUrls = selectedIndices.map((i) => photoUrls[i])
@@ -110,6 +116,7 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
             />
             {overlay && (
               <img
+                crossOrigin="anonymous"
                 src={overlay.src}
                 alt=""
                 draggable="false"

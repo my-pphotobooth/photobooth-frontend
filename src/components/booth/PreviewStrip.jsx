@@ -27,6 +27,7 @@ export default function PreviewStrip({
             )}
             {overlays[i] && (
               <img
+                crossOrigin="anonymous"
                 src={overlays[i].src}
                 alt=""
                 draggable="false"

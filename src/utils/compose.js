@@ -23,6 +23,9 @@ export async function composeFrame({
   canvas.width = FRAME_WIDTH
   canvas.height = FRAME_HEIGHT
   const ctx = canvas.getContext('2d')
+  if (!ctx) {
+    throw new Error('canvas context is not available')
+  }
 
   ctx.fillStyle = frame.backgroundColor
   ctx.fillRect(0, 0, FRAME_WIDTH, FRAME_HEIGHT)
@@ -46,9 +49,14 @@ export async function composeFrame({
     ctx.rect(slot.x, slot.y, slot.width, slot.height)
     ctx.clip()
 
-    ctx.filter = filterCss && filterCss !== 'none' ? filterCss : 'none'
+    const canUseFilter = 'filter' in ctx
+    if (canUseFilter) {
+      ctx.filter = filterCss && filterCss !== 'none' ? filterCss : 'none'
+    }
     drawImageCover(ctx, img, slot.x, slot.y, slot.width, slot.height)
-    ctx.filter = 'none'
+    if (canUseFilter) {
+      ctx.filter = 'none'
+    }
 
     const overlayImg = overlayImages[i]
     const overlayData = overlays[i]
@@ -72,8 +80,14 @@ export async function composeFrame({
   }
   ctx.fillText(frame.footerText, FRAME_WIDTH / 2, FOOTER_Y)
 
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), 'image/png')
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('canvas export failed'))
+        return
+      }
+      resolve(blob)
+    }, 'image/png')
   })
 }
 
@@ -98,7 +112,7 @@ function loadImageFromSrc(src) {
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload = () => resolve(img)
-    img.onerror = reject
+    img.onerror = () => reject(new Error(`failed to load overlay image: ${src}`))
     img.src = src
   })
 }

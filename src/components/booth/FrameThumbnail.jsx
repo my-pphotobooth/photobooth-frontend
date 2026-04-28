@@ -18,6 +18,7 @@ export default function FrameThumbnail({ frame }) {
             >
               {overlay && (
                 <img
+                  crossOrigin="anonymous"
                   src={overlay.src}
                   alt=""
                   className="pointer-events-none absolute w-auto"

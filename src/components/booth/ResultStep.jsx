@@ -68,6 +68,12 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
     [composedBlob],
   )
 
+  useEffect(() => {
+    return () => {
+      if (composedUrl) URL.revokeObjectURL(composedUrl)
+    }
+  }, [composedUrl])
+
   function handleDownload() {
     if (!composedUrl) return
     const a = document.createElement('a')

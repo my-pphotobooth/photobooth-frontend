@@ -463,6 +463,7 @@ function OverlayRow({
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-neutral-300 bg-white">
           {overlay.src ? (
             <img
+              crossOrigin="anonymous"
               src={overlay.src}
               alt=""
               className="h-full w-full object-contain"
