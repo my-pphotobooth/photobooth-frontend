@@ -1,9 +1,10 @@
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
-export async function uploadPhoto(blob, { frameId } = {}) {
+export async function uploadPhoto(blob, { frameId, tapeId } = {}) {
   const fd = new FormData()
   fd.append('file', blob, 'photo.png')
   if (frameId) fd.append('frameId', frameId)
+  if (tapeId) fd.append('tapeId', tapeId)
   const res = await fetch(`${API}/api/photos`, {
     method: 'POST',
     body: fd,
