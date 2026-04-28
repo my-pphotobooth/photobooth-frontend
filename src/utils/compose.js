@@ -107,14 +107,22 @@ function loadBlobAsImage(blob) {
   })
 }
 
-function loadImageFromSrc(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error(`failed to load overlay image: ${src}`))
-    img.src = src
-  })
+async function loadImageFromSrc(src) {
+  try {
+    const res = await fetch(src, {
+      mode: 'cors',
+      credentials: 'omit',
+    })
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+    const blob = await res.blob()
+    return await loadBlobAsImage(blob)
+  } catch (err) {
+    throw new Error(
+      `failed to load overlay image: ${src} (${err?.message ?? 'unknown'})`,
+    )
+  }
 }
 
 function drawImageCover(ctx, img, dx, dy, dw, dh) {
