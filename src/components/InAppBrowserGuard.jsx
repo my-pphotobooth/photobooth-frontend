@@ -74,7 +74,7 @@ export default function InAppBrowserGuard({ children }) {
           <button
             type="button"
             onClick={openChrome}
-            className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-neutral-200 transition hover:bg-neutral-800"
+            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 shadow-sm transition hover:border-neutral-400 hover:bg-neutral-100"
           >
             Chrome에서 열기
           </button>
@@ -82,7 +82,7 @@ export default function InAppBrowserGuard({ children }) {
             <button
               type="button"
               onClick={openSamsungInternet}
-            className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-neutral-200 transition hover:bg-neutral-800"
+              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 shadow-sm transition hover:border-neutral-400 hover:bg-neutral-100"
             >
               삼성 브라우저에서 열기
             </button>
@@ -90,7 +90,7 @@ export default function InAppBrowserGuard({ children }) {
           <button
             type="button"
             onClick={copyUrl}
-            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm font-medium text-neutral-800 shadow-sm transition hover:bg-neutral-100"
+            className="w-full rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
           >
             {copied ? '링크를 복사했어요' : '링크 복사하기'}
           </button>
