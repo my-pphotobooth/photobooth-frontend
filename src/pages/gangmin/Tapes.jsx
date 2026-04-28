@@ -137,7 +137,9 @@ function TapeRow({ item, onChanged, onError }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(item.name)
   const [sortOrder, setSortOrder] = useState(item.sortOrder)
+  const [file, setFile] = useState(null)
   const [busy, setBusy] = useState(false)
+  const fileInputRef = useRef(null)
   const toast = useToast()
   const confirm = useConfirm()
 
@@ -148,8 +150,11 @@ function TapeRow({ item, onChanged, onError }) {
       await updateTape(item.id, {
         name: name.trim(),
         sortOrder: Number(sortOrder) || 0,
+        file: file ?? undefined,
       })
       setEditing(false)
+      setFile(null)
+      if (fileInputRef.current) fileInputRef.current.value = ''
       toast.success('수정했어요')
       onChanged()
     } catch (err) {
@@ -162,6 +167,8 @@ function TapeRow({ item, onChanged, onError }) {
   function cancel() {
     setName(item.name)
     setSortOrder(item.sortOrder)
+    setFile(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
     setEditing(false)
   }
 
@@ -200,38 +207,51 @@ function TapeRow({ item, onChanged, onError }) {
 
   if (editing) {
     return (
-      <li className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center">
-        <img
-          src={item.url}
-          alt=""
-          className="h-10 w-24 shrink-0 rounded border border-neutral-200 bg-neutral-50 object-contain"
-        />
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm"
-        />
-        <input
-          type="number"
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm sm:w-20"
-        />
-        <div className="flex gap-2">
-          <button
-            onClick={save}
-            disabled={busy}
-            className="rounded-md bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-50"
-          >
-            저장
-          </button>
-          <button
-            onClick={cancel}
-            disabled={busy}
-            className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
-          >
-            취소
-          </button>
+      <li className="flex flex-col gap-2 p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <img
+            src={item.url}
+            alt=""
+            className="h-10 w-24 shrink-0 rounded border border-neutral-200 bg-neutral-50 object-contain"
+          />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm sm:w-20"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={save}
+              disabled={busy}
+              className="rounded-md bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+            >
+              저장
+            </button>
+            <button
+              onClick={cancel}
+              disabled={busy}
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 pl-1 text-xs text-neutral-500">
+          <span className="shrink-0">이미지 교체:</span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="text-xs"
+          />
+          <span className="text-neutral-400">(선택 안 하면 기존 이미지 유지)</span>
         </div>
       </li>
     )

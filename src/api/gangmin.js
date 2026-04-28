@@ -146,8 +146,34 @@ export async function createTape({ name, file, sortOrder = 0, active = true }) {
   return res.json()
 }
 
-export const updateTape = (id, data) =>
-  jreq('PATCH', `/api/gangmin/tapes/${id}`, data)
+export async function updateTape(id, { name, sortOrder, active, file } = {}) {
+  const fd = new FormData()
+  if (name !== undefined) fd.append('name', name)
+  if (sortOrder !== undefined) fd.append('sortOrder', String(sortOrder))
+  if (active !== undefined) fd.append('active', String(active))
+  if (file) fd.append('file', file)
+  const res = await fetch(`${API}/api/gangmin/tapes/${id}`, {
+    method: 'PATCH',
+    headers: { ...authHeaders() },
+    body: fd,
+  })
+  if (res.status === 401) {
+    setToken(null)
+    throw new UnauthorizedError('인증이 만료됐어요. 다시 로그인 해주세요.')
+  }
+  if (!res.ok) {
+    let message = `update failed: ${res.status}`
+    try {
+      const err = await res.json()
+      if (err?.error) message = err.error
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message)
+  }
+  return res.json()
+}
+
 export const deleteTape = (id) => jreq('DELETE', `/api/gangmin/tapes/${id}`)
 
 export async function uploadAdminFile(file) {
