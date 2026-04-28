@@ -9,10 +9,10 @@ export default function MorePhotosLink() {
       aria-label="more photos"
     >
       {/* 모바일/sm/md: 가로 손그림 텍스트, lg+: 세로 손그림 텍스트 */}
-      <PhotosTextHorizontal className="h-12 w-auto lg:hidden" />
+      <PhotosTextHorizontal className="h-9 w-auto lg:hidden" />
       <PhotosTextVertical className="hidden h-96 w-auto lg:block xl:h-112" />
 
-      <RightArrow className="h-12 w-auto lg:h-24 xl:h-32" />
+      <RightArrow className="h-9 w-auto lg:h-24 xl:h-32" />
     </Link>
   )
 }
