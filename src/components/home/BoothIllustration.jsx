@@ -31,10 +31,19 @@ export default function BoothIllustration({ mirrorOn, onMirrorToggle }) {
         {/* 거울 클릭 영역 → 카메라 토글 */}
         <button
           onClick={onMirrorToggle}
-          className="absolute transition"
+          className="group absolute"
           style={areaStyle(AREAS.mirror)}
           aria-label={mirrorOn ? '거울 닫기' : '거울 (셀카 미리보기)'}
         >
+          {!mirrorOn && (
+            <svg
+              viewBox="0 0 893 1543"
+              preserveAspectRatio="xMidYMid meet"
+              className="pointer-events-none absolute inset-0 h-full w-full opacity-0 transition group-hover:opacity-100"
+            >
+              <path d={MIRROR_PATH} fill="rgb(125 211 252 / 0.35)" />
+            </svg>
+          )}
           {mirrorOn && <MirrorCamera />}
         </button>
       </div>
