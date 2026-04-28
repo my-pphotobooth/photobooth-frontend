@@ -113,6 +113,9 @@ export async function fetchAdminPhotos({ cursor, limit } = {}) {
 export const deleteAdminPhoto = (id) =>
   jreq('DELETE', `/api/gangmin/photos/${id}`)
 
+export const updateAdminPhoto = (id, data) =>
+  jreq('PATCH', `/api/gangmin/photos/${id}`, data)
+
 export async function fetchAdminTapes() {
   const data = await jreq('GET', '/api/gangmin/tapes')
   return data.items

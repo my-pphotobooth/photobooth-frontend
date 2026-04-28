@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react'
-import { deleteAdminPhoto, fetchAdminPhotos } from '../../api/gangmin'
+import {
+  deleteAdminPhoto,
+  fetchAdminPhotos,
+  updateAdminPhoto,
+} from '../../api/gangmin'
+import { fetchTapes } from '../../api/tapes'
 import { EmptyState, ErrorBanner, Spinner, useConfirm, useToast } from './ui'
 
 export default function Photos() {
   const [items, setItems] = useState([])
+  const [tapes, setTapes] = useState([])
   const [cursor, setCursor] = useState(null)
   const [hasMore, setHasMore] = useState(false)
   const [status, setStatus] = useState('loading')
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
+  const [editingId, setEditingId] = useState(null)
   const toast = useToast()
   const confirm = useConfirm()
 
@@ -29,6 +36,9 @@ export default function Photos() {
 
   useEffect(() => {
     load(true)
+    fetchTapes()
+      .then(setTapes)
+      .catch((err) => console.warn('failed to load tapes:', err))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -50,6 +60,17 @@ export default function Photos() {
       await deleteAdminPhoto(photo.id)
       setItems((prev) => prev.filter((p) => p.id !== photo.id))
       toast.success('삭제했어요')
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleSaveTape(photo, tapeId) {
+    try {
+      const updated = await updateAdminPhoto(photo.id, { tapeId })
+      setItems((prev) => prev.map((p) => (p.id === photo.id ? updated : p)))
+      setEditingId(null)
+      toast.success('테이프를 변경했어요')
     } catch (err) {
       setError(err.message)
     }
@@ -79,6 +100,7 @@ export default function Photos() {
                 key={photo.id}
                 photo={photo}
                 onDelete={() => handleDelete(photo)}
+                onChangeTape={() => setEditingId(photo.id)}
               />
             ))}
           </ul>
@@ -96,11 +118,22 @@ export default function Photos() {
           )}
         </>
       )}
+
+      {editingId && (
+        <TapeEditModal
+          photo={items.find((p) => p.id === editingId)}
+          tapes={tapes}
+          onCancel={() => setEditingId(null)}
+          onConfirm={(tapeId) =>
+            handleSaveTape(items.find((p) => p.id === editingId), tapeId)
+          }
+        />
+      )}
     </section>
   )
 }
 
-function PhotoCard({ photo, onDelete }) {
+function PhotoCard({ photo, onDelete, onChangeTape }) {
   return (
     <li className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-2">
       <div className="overflow-hidden rounded-md bg-neutral-50">
@@ -115,16 +148,107 @@ function PhotoCard({ photo, onDelete }) {
         <span>{formatDate(photo.createdAt)}</span>
         <span className="flex flex-wrap gap-x-2">
           {photo.frameName && <span>프레임: {photo.frameName}</span>}
-          {photo.tape && <span>테이프: {photo.tape.name}</span>}
+          <span>테이프: {photo.tape ? photo.tape.name : '없음'}</span>
         </span>
       </div>
-      <button
-        onClick={onDelete}
-        className="rounded-md border border-red-300 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50"
-      >
-        삭제
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={onChangeTape}
+          className="flex-1 rounded-md border border-neutral-300 px-3 py-1.5 text-xs hover:bg-neutral-50"
+        >
+          테이프 변경
+        </button>
+        <button
+          onClick={onDelete}
+          className="flex-1 rounded-md border border-red-300 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50"
+        >
+          삭제
+        </button>
+      </div>
     </li>
+  )
+}
+
+function TapeEditModal({ photo, tapes, onCancel, onConfirm }) {
+  const [selectedId, setSelectedId] = useState(photo?.tape?.id ?? null)
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center"
+      onClick={onCancel}
+    >
+      <div
+        className="flex max-h-[85vh] w-full flex-col rounded-t-2xl bg-white sm:max-w-md sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-3">
+          <h3 className="text-base font-bold text-neutral-900">테이프 변경</h3>
+          <button
+            onClick={onCancel}
+            className="text-neutral-400 hover:text-neutral-700"
+            aria-label="닫기"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <button
+              onClick={() => setSelectedId(null)}
+              className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 bg-neutral-50 p-2 transition ${
+                selectedId === null
+                  ? 'border-neutral-900'
+                  : 'border-transparent hover:border-neutral-300'
+              }`}
+            >
+              <div className="flex h-8 w-full items-center justify-center text-xs text-neutral-400">
+                ✕
+              </div>
+              <span className="text-xs text-neutral-700">없음</span>
+            </button>
+            {tapes.map((tape) => {
+              const isSelected = tape.id === selectedId
+              return (
+                <button
+                  key={tape.id}
+                  onClick={() => setSelectedId(tape.id)}
+                  className={`flex flex-col items-center gap-1.5 rounded-lg border-2 bg-neutral-50 p-2 transition ${
+                    isSelected
+                      ? 'border-neutral-900'
+                      : 'border-transparent hover:border-neutral-300'
+                  }`}
+                >
+                  <img
+                    src={tape.url}
+                    alt=""
+                    className="h-8 w-full object-contain"
+                  />
+                  <span className="truncate text-xs text-neutral-700">
+                    {tape.name}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 gap-2 border-t border-neutral-200 px-5 py-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700"
+          >
+            취소
+          </button>
+          <button
+            onClick={() => onConfirm(selectedId)}
+            className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white"
+          >
+            확정
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
