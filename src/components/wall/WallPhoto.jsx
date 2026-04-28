@@ -8,19 +8,19 @@ export default function WallPhoto({ photo, onClick }) {
       className="group relative block w-full transition hover:z-10 hover:scale-[1.02]"
       style={{ transform: `rotate(${angle}deg)` }}
     >
-      <div
-        className="absolute left-1/2 top-0 z-10 w-4/5"
-        style={{ transform: `translate(-50%, -50%) rotate(${tapeAngle}deg)` }}
-      >
-        {/* TODO: 추후 마스킹 테이프 SVG/PNG 에셋으로 교체 */}
+      {photo.tape && (
         <div
-          className="h-5 w-full bg-amber-100/70 shadow-sm sm:h-6"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0 2px, transparent 2px 6px)',
-          }}
-        />
-      </div>
+          className="pointer-events-none absolute left-1/2 top-0 z-10 w-[80%]"
+          style={{ transform: `translate(-50%, -50%) rotate(${tapeAngle}deg)` }}
+        >
+          <img
+            src={photo.tape.url}
+            alt=""
+            draggable="false"
+            className="block w-full drop-shadow-sm"
+          />
+        </div>
+      )}
       <img
         src={photo.url}
         alt=""
