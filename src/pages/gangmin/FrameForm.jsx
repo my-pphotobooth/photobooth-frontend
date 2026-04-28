@@ -487,16 +487,22 @@ function OverlayRow({
             label="오른쪽"
             value={overlay.right}
             onChange={(v) => onChange({ right: v })}
+            min={-1}
+            max={2}
           />
           <Slider
             label="아래쪽"
             value={overlay.bottom}
             onChange={(v) => onChange({ bottom: v })}
+            min={-1}
+            max={2}
           />
           <Slider
             label="높이"
             value={overlay.height}
             onChange={(v) => onChange({ height: v })}
+            min={0.1}
+            max={3}
           />
         </div>
       </div>
@@ -504,14 +510,14 @@ function OverlayRow({
   )
 }
 
-function Slider({ label, value, onChange }) {
+function Slider({ label, value, onChange, min = 0, max = 1 }) {
   return (
     <label className="flex items-center gap-2">
       <span className="w-10 shrink-0 text-xs text-neutral-600">{label}</span>
       <input
         type="range"
-        min="0"
-        max="1"
+        min={min}
+        max={max}
         step="0.01"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}

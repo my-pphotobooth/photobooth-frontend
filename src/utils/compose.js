@@ -40,6 +40,7 @@ export async function composeFrame({
     const img = images[i]
     if (!img) continue
 
+    // 사진과 오버레이 모두 자기 슬롯에 클립 — 옆 컷 침범 X, 프레임 영역 침범 X
     ctx.save()
     ctx.beginPath()
     ctx.rect(slot.x, slot.y, slot.width, slot.height)
@@ -54,10 +55,8 @@ export async function composeFrame({
     if (overlayImg && overlayData) {
       const oh = overlayData.height * slot.height
       const ow = oh * (overlayImg.width / overlayImg.height)
-      const ox =
-        slot.x + slot.width - ow - overlayData.right * slot.width
-      const oy =
-        slot.y + slot.height - oh - overlayData.bottom * slot.height
+      const ox = slot.x + slot.width - ow - overlayData.right * slot.width
+      const oy = slot.y + slot.height - oh - overlayData.bottom * slot.height
       ctx.drawImage(overlayImg, ox, oy, ow, oh)
     }
 
