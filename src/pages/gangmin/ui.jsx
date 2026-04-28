@@ -1,8 +1,7 @@
-import { createContext, useCallback, useContext, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { ConfirmContext, ToastContext } from './uiHooks'
 
 // ----- Toast -----
-
-const ToastContext = createContext(null)
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([])
@@ -46,15 +45,7 @@ export function ToastProvider({ children }) {
   )
 }
 
-export function useToast() {
-  const ctx = useContext(ToastContext)
-  if (!ctx) throw new Error('useToast outside ToastProvider')
-  return ctx
-}
-
 // ----- Confirm -----
-
-const ConfirmContext = createContext(null)
 
 export function ConfirmProvider({ children }) {
   const [state, setState] = useState(null)
@@ -122,12 +113,6 @@ export function ConfirmProvider({ children }) {
       )}
     </ConfirmContext.Provider>
   )
-}
-
-export function useConfirm() {
-  const confirm = useContext(ConfirmContext)
-  if (!confirm) throw new Error('useConfirm outside ConfirmProvider')
-  return confirm
 }
 
 // ----- Display primitives -----

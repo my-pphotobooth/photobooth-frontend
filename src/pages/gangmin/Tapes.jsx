@@ -5,7 +5,8 @@ import {
   fetchAdminTapes,
   updateTape,
 } from '../../api/gangmin'
-import { EmptyState, ErrorBanner, Spinner, useConfirm, useToast } from './ui'
+import { EmptyState, ErrorBanner, Spinner } from './ui'
+import { useConfirm, useToast } from './uiHooks'
 
 export default function Tapes() {
   const [items, setItems] = useState([])
@@ -25,7 +26,21 @@ export default function Tapes() {
   }
 
   useEffect(() => {
-    reload()
+    let cancelled = false
+    fetchAdminTapes()
+      .then((tapes) => {
+        if (cancelled) return
+        setItems(tapes)
+        setStatus('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err.message)
+        setStatus('error')
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   return (

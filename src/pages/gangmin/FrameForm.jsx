@@ -8,7 +8,8 @@ import {
   uploadAdminFile,
 } from '../../api/gangmin'
 import { composeFrame } from '../../utils/compose'
-import { Spinner, useToast } from './ui'
+import { Spinner } from './ui'
+import { useToast } from './uiHooks'
 
 const EMPTY_FORM = {
   name: '',
@@ -256,8 +257,8 @@ function LivePreview({ form, overlays }) {
 
   useEffect(() => {
     let cancelled = false
-    setPending(true)
     const timer = setTimeout(async () => {
+      if (!cancelled) setPending(true)
       try {
         const photoBlobs = makeDummyPhotoBlobs(form.slotColor)
         const blob = await composeFrame({

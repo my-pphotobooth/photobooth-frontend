@@ -5,7 +5,8 @@ import {
   updateAdminPhoto,
 } from '../../api/gangmin'
 import { fetchTapes } from '../../api/tapes'
-import { EmptyState, ErrorBanner, Spinner, useConfirm, useToast } from './ui'
+import { EmptyState, ErrorBanner, Spinner } from './ui'
+import { useConfirm, useToast } from './uiHooks'
 
 export default function Photos() {
   const [items, setItems] = useState([])
@@ -35,11 +36,30 @@ export default function Photos() {
   }
 
   useEffect(() => {
-    load(true)
+    let cancelled = false
+    fetchAdminPhotos({})
+      .then((data) => {
+        if (cancelled) return
+        setItems(data.items)
+        setCursor(data.nextCursor)
+        setHasMore(Boolean(data.nextCursor))
+        setStatus('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err.message)
+        setStatus('error')
+      })
     fetchTapes()
-      .then(setTapes)
-      .catch((err) => console.warn('failed to load tapes:', err))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      .then((items) => {
+        if (!cancelled) setTapes(items)
+      })
+      .catch((err) => {
+        if (!cancelled) console.warn('failed to load tapes:', err)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   async function loadMore() {

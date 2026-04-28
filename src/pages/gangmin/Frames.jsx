@@ -5,7 +5,8 @@ import {
   fetchAdminCategories,
   fetchAdminFrames,
 } from '../../api/gangmin'
-import { EmptyState, ErrorBanner, Spinner, useConfirm, useToast } from './ui'
+import { EmptyState, ErrorBanner, Spinner } from './ui'
+import { useConfirm, useToast } from './uiHooks'
 
 export default function Frames() {
   const [frames, setFrames] = useState([])
@@ -31,7 +32,22 @@ export default function Frames() {
   }
 
   useEffect(() => {
-    reload()
+    let cancelled = false
+    Promise.all([fetchAdminFrames(), fetchAdminCategories()])
+      .then(([frs, cats]) => {
+        if (cancelled) return
+        setFrames(frs)
+        setCategories(cats)
+        setStatus('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err.message)
+        setStatus('error')
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   async function handleDelete(frame) {

@@ -6,7 +6,8 @@ import {
   fetchAdminFrames,
   updateCategory,
 } from '../../api/gangmin'
-import { EmptyState, ErrorBanner, Spinner, useConfirm, useToast } from './ui'
+import { EmptyState, ErrorBanner, Spinner } from './ui'
+import { useConfirm, useToast } from './uiHooks'
 
 export default function Categories() {
   const [items, setItems] = useState([])
@@ -31,7 +32,22 @@ export default function Categories() {
   }
 
   useEffect(() => {
-    reload()
+    let cancelled = false
+    Promise.all([fetchAdminCategories(), fetchAdminFrames()])
+      .then(([cats, frs]) => {
+        if (cancelled) return
+        setItems(cats)
+        setFrames(frs)
+        setStatus('ready')
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err.message)
+        setStatus('error')
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const frameCountByCategory = useMemo(() => {

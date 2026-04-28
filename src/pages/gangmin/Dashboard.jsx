@@ -5,7 +5,8 @@ import {
   fetchAdminCategories,
   fetchAdminFrames,
 } from '../../api/gangmin'
-import { ErrorBanner, Spinner, useConfirm, useToast } from './ui'
+import { ErrorBanner, Spinner } from './ui'
+import { useConfirm, useToast } from './uiHooks'
 
 export default function Dashboard() {
   const [counts, setCounts] = useState(null)
