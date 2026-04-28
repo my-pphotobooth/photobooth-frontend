@@ -36,6 +36,8 @@ function idToAngle(id, range) {
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0
   }
-  const normalized = ((hash % 1000) / 1000 - 0.5) * 2
+  // JS의 %는 음수에서 음수를 반환해서 한쪽으로 편향됨 → unsigned로 변환
+  const unsigned = hash >>> 0
+  const normalized = ((unsigned % 1000) / 1000 - 0.5) * 2 // -1..+1
   return normalized * range
 }
