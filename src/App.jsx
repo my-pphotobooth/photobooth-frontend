@@ -8,6 +8,7 @@ import Dashboard from './pages/gangmin/Dashboard'
 import Categories from './pages/gangmin/Categories'
 import Frames from './pages/gangmin/Frames'
 import FrameForm from './pages/gangmin/FrameForm'
+import Tapes from './pages/gangmin/Tapes'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="frames" element={<Frames />} />
           <Route path="frames/new" element={<FrameForm mode="create" />} />
           <Route path="frames/:id/edit" element={<FrameForm mode="edit" />} />
+          <Route path="tapes" element={<Tapes />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -66,6 +66,7 @@ export default function GangminLayout() {
               </Tab>
               <Tab to="/gangmin/categories">카테고리</Tab>
               <Tab to="/gangmin/frames">프레임</Tab>
+              <Tab to="/gangmin/tapes">테이프</Tab>
             </nav>
           </header>
           <main className="mx-auto max-w-5xl px-4 py-6">

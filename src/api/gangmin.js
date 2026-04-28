@@ -102,6 +102,43 @@ export const deleteFrame = (id) => jreq('DELETE', `/api/gangmin/frames/${id}`)
 
 export const cleanupUploads = () => jreq('POST', '/api/gangmin/cleanup-uploads')
 
+export async function fetchAdminTapes() {
+  const data = await jreq('GET', '/api/gangmin/tapes')
+  return data.items
+}
+
+export async function createTape({ name, file, sortOrder = 0, active = true }) {
+  const fd = new FormData()
+  fd.append('name', name)
+  fd.append('file', file)
+  fd.append('sortOrder', String(sortOrder))
+  fd.append('active', String(active))
+  const res = await fetch(`${API}/api/gangmin/tapes`, {
+    method: 'POST',
+    headers: { ...authHeaders() },
+    body: fd,
+  })
+  if (res.status === 401) {
+    setToken(null)
+    throw new UnauthorizedError('인증이 만료됐어요. 다시 로그인 해주세요.')
+  }
+  if (!res.ok) {
+    let message = `upload failed: ${res.status}`
+    try {
+      const err = await res.json()
+      if (err?.error) message = err.error
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message)
+  }
+  return res.json()
+}
+
+export const updateTape = (id, data) =>
+  jreq('PATCH', `/api/gangmin/tapes/${id}`, data)
+export const deleteTape = (id) => jreq('DELETE', `/api/gangmin/tapes/${id}`)
+
 export async function uploadAdminFile(file) {
   const fd = new FormData()
   fd.append('file', file)
