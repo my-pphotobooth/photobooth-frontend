@@ -9,6 +9,7 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
   const [composedBlob, setComposedBlob] = useState(null)
   const [status, setStatus] = useState('composing')
   const [errorMessage, setErrorMessage] = useState(null)
+  const [errorDetail, setErrorDetail] = useState(null)
   const [tapes, setTapes] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const navigate = useNavigate()
@@ -37,7 +38,8 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
       } catch (err) {
         if (cancelled) return
         console.error(err)
-        setErrorMessage(err?.message || '합성 중 오류가 발생했어요')
+        setErrorMessage('합성 중 오류가 발생했어요')
+        setErrorDetail(formatErrorDetail(err))
         setStatus('error')
       }
     }
@@ -88,13 +90,16 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
     if (!composedBlob) return
     setPickerOpen(false)
     setStatus('uploading')
+    setErrorMessage(null)
+    setErrorDetail(null)
     try {
       await uploadPhoto(composedBlob, { frameId: frame.id, tapeId })
       setStatus('uploaded')
       setTimeout(() => navigate('/wall'), 700)
     } catch (err) {
       console.error(err)
-      setErrorMessage(err?.message || '업로드에 실패했어요')
+      setErrorMessage('업로드에 실패했어요')
+      setErrorDetail(formatErrorDetail(err))
       setStatus('ready')
     }
   }
@@ -149,9 +154,7 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
             다시 찍기
           </button>
           {errorMessage && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-center text-xs text-red-700">
-              {errorMessage}
-            </p>
+            <ErrorDetails message={errorMessage} detail={errorDetail} />
           )}
         </div>
       </div>
@@ -165,6 +168,36 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
       )}
     </div>
   )
+}
+
+function ErrorDetails({ message, detail }) {
+  return (
+    <div className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
+      <p className="text-center">{message}</p>
+      {detail && (
+        <details className="mt-2 text-left">
+          <summary className="cursor-pointer select-none text-red-800">
+            오류 상세
+          </summary>
+          <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded bg-white/70 p-2 font-mono text-[10px] leading-relaxed text-red-900">
+            {detail}
+          </pre>
+        </details>
+      )}
+    </div>
+  )
+}
+
+function formatErrorDetail(err) {
+  const lines = []
+  lines.push(`name: ${err?.name ?? 'UnknownError'}`)
+  lines.push(`message: ${err?.message ?? String(err)}`)
+  if (err?.stack) {
+    lines.push('stack:')
+    lines.push(String(err.stack).split('\n').slice(0, 6).join('\n'))
+  }
+  lines.push(`userAgent: ${navigator.userAgent}`)
+  return lines.join('\n')
 }
 
 function TapePickerModal({ tapes, onCancel, onConfirm }) {
