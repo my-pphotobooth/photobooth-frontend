@@ -14,9 +14,9 @@ function isIOS() {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent)
 }
 
-function buildChromeIntent(url) {
+function buildAndroidBrowserIntent(url, packageName) {
   const u = new URL(url)
-  return `intent://${u.host}${u.pathname}${u.search}${u.hash}#Intent;scheme=${u.protocol.replace(':', '')};package=com.android.chrome;end`
+  return `intent://${u.host}${u.pathname}${u.search}${u.hash}#Intent;scheme=${u.protocol.replace(':', '')};package=${packageName};end`
 }
 
 function buildIOSChromeUrl(url) {
@@ -45,8 +45,15 @@ export default function InAppBrowserGuard({ children }) {
 
   function openChrome() {
     window.location.href = android
-      ? buildChromeIntent(currentUrl)
+      ? buildAndroidBrowserIntent(currentUrl, 'com.android.chrome')
       : buildIOSChromeUrl(currentUrl)
+  }
+
+  function openSamsungInternet() {
+    window.location.href = buildAndroidBrowserIntent(
+      currentUrl,
+      'com.sec.android.app.sbrowser',
+    )
   }
 
   return (
@@ -63,18 +70,27 @@ export default function InAppBrowserGuard({ children }) {
           있어요. Safari나 Chrome에서 열면 더 안정적으로 촬영할 수 있습니다.
         </p>
 
-        <div className="mt-6 flex flex-col gap-2">
+        <div className="mt-6 grid grid-cols-1 gap-2">
           <button
             type="button"
             onClick={openChrome}
-            className="rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-neutral-200 transition hover:bg-neutral-800"
+            className="w-full rounded-xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-neutral-200 transition hover:bg-neutral-800"
           >
             Chrome에서 열기
           </button>
+          {android && (
+            <button
+              type="button"
+              onClick={openSamsungInternet}
+              className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 shadow-sm transition hover:bg-neutral-100"
+            >
+              삼성 브라우저에서 열기
+            </button>
+          )}
           <button
             type="button"
             onClick={copyUrl}
-            className="rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm font-medium text-neutral-800 shadow-sm transition hover:bg-neutral-100"
+            className="w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm font-medium text-neutral-800 shadow-sm transition hover:bg-neutral-100"
           >
             {copied ? '링크를 복사했어요' : '링크 복사하기'}
           </button>
@@ -88,8 +104,8 @@ export default function InAppBrowserGuard({ children }) {
         )}
         {android && (
           <p className="mt-5 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left text-xs leading-5 text-neutral-500 shadow-sm">
-            버튼이 동작하지 않으면 메뉴에서 Chrome으로 열기를 선택하거나 링크를
-            복사해 Chrome 주소창에 붙여넣어 주세요.
+            버튼이 동작하지 않으면 메뉴에서 외부 브라우저로 열기를 선택하거나
+            링크를 복사해 주소창에 붙여넣어 주세요.
           </p>
         )}
       </div>
