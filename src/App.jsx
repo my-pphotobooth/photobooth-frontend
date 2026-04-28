@@ -9,6 +9,7 @@ import Categories from './pages/gangmin/Categories'
 import Frames from './pages/gangmin/Frames'
 import FrameForm from './pages/gangmin/FrameForm'
 import Tapes from './pages/gangmin/Tapes'
+import Photos from './pages/gangmin/Photos'
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="frames/new" element={<FrameForm mode="create" />} />
           <Route path="frames/:id/edit" element={<FrameForm mode="edit" />} />
           <Route path="tapes" element={<Tapes />} />
+          <Route path="photos" element={<Photos />} />
         </Route>
       </Routes>
     </BrowserRouter>

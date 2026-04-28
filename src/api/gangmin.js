@@ -102,6 +102,17 @@ export const deleteFrame = (id) => jreq('DELETE', `/api/gangmin/frames/${id}`)
 
 export const cleanupUploads = () => jreq('POST', '/api/gangmin/cleanup-uploads')
 
+export async function fetchAdminPhotos({ cursor, limit } = {}) {
+  const qs = new URLSearchParams()
+  if (cursor) qs.set('cursor', cursor)
+  if (limit) qs.set('limit', String(limit))
+  const path = `/api/gangmin/photos${qs.size ? `?${qs}` : ''}`
+  return jreq('GET', path)
+}
+
+export const deleteAdminPhoto = (id) =>
+  jreq('DELETE', `/api/gangmin/photos/${id}`)
+
 export async function fetchAdminTapes() {
   const data = await jreq('GET', '/api/gangmin/tapes')
   return data.items
