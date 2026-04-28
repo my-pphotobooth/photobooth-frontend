@@ -90,7 +90,7 @@ export default function InAppBrowserGuard({ children }) {
           <button
             type="button"
             onClick={copyUrl}
-            className="w-full rounded-xl px-4 py-3 text-sm font-medium text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+            className="w-full rounded-xl border border-neutral-200 bg-neutral-100 px-4 py-3 text-sm font-medium text-neutral-600 transition hover:border-neutral-300 hover:bg-neutral-200 hover:text-neutral-800"
           >
             {copied ? '링크를 복사했어요' : '링크 복사하기'}
           </button>
