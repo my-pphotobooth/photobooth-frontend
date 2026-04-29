@@ -1,28 +1,34 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DEFAULT_FILTER_ID, filters, getFilterById } from '../../data/filters'
 import PreviewStrip from './PreviewStrip'
 
-export default function EditStep({ frame, photos, onDone }) {
+export default function EditStep({ frame, photos, onDraftChange }) {
   const [selectedIndices, setSelectedIndices] = useState([])
   const [filterId, setFilterId] = useState(DEFAULT_FILTER_ID)
-
-  const photoUrls = useMemo(
-    () => photos.map((blob) => URL.createObjectURL(blob)),
-    [photos],
-  )
+  const [photoUrls, setPhotoUrls] = useState([])
 
   useEffect(() => {
+    const urls = photos.map((blob) => URL.createObjectURL(blob))
+    // StrictMode의 가짜 unmount에서도 새 URL을 만들도록 effect 안에서 setState
+    // eslint-disable-next-line
+    setPhotoUrls(urls)
     return () => {
-      photoUrls.forEach((url) => URL.revokeObjectURL(url))
+      urls.forEach((url) => URL.revokeObjectURL(url))
     }
-  }, [photoUrls])
+  }, [photos])
 
   const filter = getFilterById(filterId)
   const previewUrls = selectedIndices.map((i) => photoUrls[i])
-  const previewOverlays = selectedIndices.map(
-    (i) => frame.overlays?.[i],
-  )
+  const previewOverlays = selectedIndices.map((i) => frame.overlays?.[i])
   const canProceed = selectedIndices.length === 4
+
+  useEffect(() => {
+    onDraftChange?.({
+      selectedIndices,
+      filterId,
+      canProceed,
+    })
+  }, [selectedIndices, filterId, canProceed, onDraftChange])
 
   function toggle(index) {
     setSelectedIndices((prev) => {
@@ -32,14 +38,6 @@ export default function EditStep({ frame, photos, onDone }) {
       }
       if (prev.length >= 4) return prev
       return [...prev, index]
-    })
-  }
-
-  function handleNext() {
-    if (!canProceed) return
-    onDone({
-      selectedIndices,
-      filterId,
     })
   }
 
@@ -77,16 +75,6 @@ export default function EditStep({ frame, photos, onDone }) {
       </div>
 
       <FilterTabs selectedId={filterId} onSelect={setFilterId} />
-
-      <div className="flex shrink-0 justify-center">
-        <button
-          onClick={handleNext}
-          disabled={!canProceed}
-          className="rounded-xl bg-neutral-900 px-10 py-3 text-white shadow-lg transition disabled:cursor-not-allowed disabled:bg-neutral-300 enabled:hover:bg-neutral-800"
-        >
-          다음
-        </button>
-      </div>
     </div>
   )
 }
@@ -101,6 +89,7 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
         return (
           <button
             key={i}
+            type="button"
             onClick={() => onToggle(i)}
             className={`relative aspect-4/3 overflow-hidden rounded-md border-2 transition lg:h-full lg:w-auto ${
               isSelected
@@ -128,9 +117,7 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
                 }}
               />
             )}
-            {isSelected && (
-              <div className="absolute inset-0 bg-black/20" />
-            )}
+            {isSelected && <div className="absolute inset-0 bg-black/20" />}
             {isSelected && (
               <div className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
                 {order + 1}
@@ -151,6 +138,7 @@ function FilterTabs({ selectedId, onSelect }) {
         return (
           <button
             key={f.id}
+            type="button"
             onClick={() => onSelect(f.id)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition sm:px-4 sm:py-2 sm:text-sm ${
               isSelected

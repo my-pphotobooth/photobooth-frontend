@@ -79,7 +79,10 @@ export default function CaptureStep({ frame, onDone }) {
   }
 
   const isRunning = phase !== 'idle' && phase !== 'done'
-  const progressLabel = `${Math.min(shotIndex + (phase === 'idle' ? 0 : 1), TOTAL_SHOTS)} / ${TOTAL_SHOTS}`
+  const progressLabel = `${Math.min(
+    shotIndex + (phase === 'idle' ? 0 : 1),
+    TOTAL_SHOTS,
+  )} / ${TOTAL_SHOTS}`
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -114,9 +117,7 @@ export default function CaptureStep({ frame, onDone }) {
             />
           )}
 
-          {status === 'requesting' && (
-            <Overlay>카메라를 준비 중이에요…</Overlay>
-          )}
+          {status === 'requesting' && <Overlay>카메라를 준비 중이에요...</Overlay>}
           {status === 'error' && (
             <Overlay>
               <div className="text-center">
@@ -145,16 +146,21 @@ export default function CaptureStep({ frame, onDone }) {
       <div className="flex justify-center pt-2">
         {!isRunning && phase !== 'done' && (
           <button
+            type="button"
             onClick={handleStart}
             disabled={status !== 'ready'}
-            className="rounded-xl bg-neutral-900 px-10 py-3 text-white shadow-lg transition disabled:cursor-not-allowed disabled:bg-neutral-300 enabled:hover:bg-neutral-800"
+            className="h-12 w-36 transition disabled:cursor-not-allowed disabled:opacity-35 disabled:grayscale enabled:hover:-translate-y-0.5 enabled:hover:drop-shadow-md enabled:active:translate-y-0 sm:h-14 sm:w-44"
           >
-            촬영 시작
+            <img
+              src="/booth/take_picture_button.svg"
+              alt="촬영 시작"
+              className="h-full w-full object-contain"
+            />
           </button>
         )}
         {isRunning && (
           <div className="text-sm text-neutral-500">
-            {phase === 'pause' ? '다음 컷 준비 중…' : '카메라를 바라봐주세요'}
+            {phase === 'pause' ? '다음 컷 준비 중...' : '카메라를 바라봐주세요'}
           </div>
         )}
       </div>

@@ -19,9 +19,7 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
 
     async function run() {
       try {
-        const selectedBlobs = editResult.selectedIndices.map(
-          (i) => photos[i],
-        )
+        const selectedBlobs = editResult.selectedIndices.map((i) => photos[i])
         const selectedOverlays = editResult.selectedIndices.map(
           (i) => frame.overlays?.[i] ?? null,
         )
@@ -50,6 +48,18 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
     }
   }, [frame, photos, editResult])
 
+  const composedUrl = useMemo(
+    () => (composedBlob ? URL.createObjectURL(composedBlob) : null),
+    [composedBlob],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (!composedUrl) return
+      window.setTimeout(() => URL.revokeObjectURL(composedUrl), 1000)
+    }
+  }, [composedUrl])
+
   useEffect(() => {
     let cancelled = false
     fetchTapes()
@@ -64,17 +74,6 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
       cancelled = true
     }
   }, [])
-
-  const composedUrl = useMemo(
-    () => (composedBlob ? URL.createObjectURL(composedBlob) : null),
-    [composedBlob],
-  )
-
-  useEffect(() => {
-    return () => {
-      if (composedUrl) URL.revokeObjectURL(composedUrl)
-    }
-  }, [composedUrl])
 
   function handleDownload() {
     if (!composedUrl) return
@@ -119,7 +118,7 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
         <div className="flex min-h-0 flex-1 items-center justify-center sm:h-full sm:flex-none">
           {status === 'composing' || !composedUrl ? (
             <div className="flex aspect-2/6 w-32 items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-500 sm:h-full sm:w-auto sm:max-w-full">
-              합성하는 중…
+              합성하는 중...
             </div>
           ) : (
             <img
@@ -130,24 +129,25 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
           )}
         </div>
 
-        <div className="flex w-full max-w-xs shrink-0 flex-col gap-3 sm:w-48">
-          <button
+        <div className="flex w-full max-w-xs shrink-0 flex-col items-center gap-3 sm:w-48">
+          <ImageActionButton
+            label="다운로드"
+            src="/booth/download_button.svg"
+            disabled={
+              status !== 'ready' &&
+              status !== 'uploading' &&
+              status !== 'uploaded'
+            }
             onClick={handleDownload}
-            disabled={status !== 'ready' && status !== 'uploading' && status !== 'uploaded'}
-            className="rounded-xl border border-neutral-300 bg-white px-6 py-3 text-sm font-medium text-neutral-900 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 enabled:hover:bg-neutral-50"
-          >
-            다운로드
-          </button>
-          <button
-            onClick={() => setPickerOpen(true)}
+          />
+          <ImageActionButton
+            label="벽에 붙이고 가기"
+            src="/booth/stick_to_wall_button.svg"
             disabled={status !== 'ready'}
-            className="rounded-xl bg-neutral-900 px-6 py-3 text-sm font-medium text-white shadow-lg transition disabled:cursor-not-allowed disabled:bg-neutral-300 enabled:hover:bg-neutral-800"
-          >
-            {status === 'uploading' && '올리는 중…'}
-            {status === 'uploaded' && '벽으로 이동합니다…'}
-            {status !== 'uploading' && status !== 'uploaded' && '벽에 붙이기'}
-          </button>
+            onClick={() => setPickerOpen(true)}
+          />
           <button
+            type="button"
             onClick={onReset}
             className="text-xs text-neutral-500 hover:text-neutral-900"
           >
@@ -167,6 +167,20 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
         />
       )}
     </div>
+  )
+}
+
+function ImageActionButton({ label, src, disabled, onClick }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      disabled={disabled}
+      className="h-12 w-36 transition disabled:cursor-not-allowed disabled:opacity-35 disabled:grayscale enabled:hover:-translate-y-0.5 enabled:hover:drop-shadow-md enabled:active:translate-y-0 sm:h-14 sm:w-44"
+    >
+      <img src={src} alt="" className="h-full w-full object-contain" />
+    </button>
   )
 }
 
@@ -216,11 +230,12 @@ function TapePickerModal({ tapes, onCancel, onConfirm }) {
         <div className="flex shrink-0 items-center justify-between border-b border-neutral-200 px-5 py-3">
           <h3 className="text-base font-bold text-neutral-900">테이프 선택</h3>
           <button
+            type="button"
             onClick={onCancel}
             className="text-neutral-400 hover:text-neutral-700"
             aria-label="닫기"
           >
-            ✕
+            x
           </button>
         </div>
 
@@ -236,6 +251,7 @@ function TapePickerModal({ tapes, onCancel, onConfirm }) {
                 return (
                   <button
                     key={tape.id}
+                    type="button"
                     onClick={() => setSelectedId(tape.id)}
                     className={`flex flex-col items-center gap-1.5 rounded-lg border-2 bg-neutral-50 p-2 transition ${
                       isSelected
@@ -260,6 +276,7 @@ function TapePickerModal({ tapes, onCancel, onConfirm }) {
 
         <div className="flex shrink-0 gap-2 border-t border-neutral-200 px-5 py-3">
           <button
+            type="button"
             onClick={onCancel}
             className="flex-1 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700"
           >
@@ -267,6 +284,7 @@ function TapePickerModal({ tapes, onCancel, onConfirm }) {
           </button>
           {isEmpty ? (
             <button
+              type="button"
               onClick={() => onConfirm(null)}
               className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white"
             >
@@ -274,6 +292,7 @@ function TapePickerModal({ tapes, onCancel, onConfirm }) {
             </button>
           ) : (
             <button
+              type="button"
               onClick={() => onConfirm(selectedId)}
               disabled={!selectedId}
               className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-neutral-300"

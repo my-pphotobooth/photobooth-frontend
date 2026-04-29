@@ -15,23 +15,22 @@ const STEP_LABEL = {
   result: '완료',
 }
 
+const STEP_ORDER = ['welcome', 'frame', 'capture', 'edit', 'result']
+
 export default function Booth() {
   const [step, setStep] = useState('welcome')
   const [selectedFrame, setSelectedFrame] = useState(null)
   const [photos, setPhotos] = useState([])
+  const [editDraft, setEditDraft] = useState(null)
   const [editResult, setEditResult] = useState(null)
 
   function handleStart() {
     setStep('frame')
   }
 
-  function handleFrameSelected(frame) {
-    setSelectedFrame(frame)
-    setStep('capture')
-  }
-
   function handleCaptureDone(blobs) {
     setPhotos(blobs)
+    setEditDraft(null)
     setStep('edit')
   }
 
@@ -43,9 +42,58 @@ export default function Booth() {
   function handleReset() {
     setSelectedFrame(null)
     setPhotos([])
+    setEditDraft(null)
     setEditResult(null)
     setStep('welcome')
   }
+
+  function handlePrevStep() {
+    const currentIndex = STEP_ORDER.indexOf(step)
+    if (currentIndex <= 0) return
+
+    if (step === 'frame') {
+      setSelectedFrame(null)
+    }
+    if (step === 'capture') {
+      setPhotos([])
+    }
+    if (step === 'edit') {
+      setEditDraft(null)
+    }
+    if (step === 'result') {
+      setEditResult(null)
+    }
+
+    setStep(STEP_ORDER[currentIndex - 1])
+  }
+
+  function handleNextStep() {
+    if (step === 'frame' && selectedFrame) {
+      setStep('capture')
+      return
+    }
+
+    if (step === 'edit' && editDraft?.canProceed) {
+      handleEditDone({
+        selectedIndices: editDraft.selectedIndices,
+        filterId: editDraft.filterId,
+      })
+    }
+  }
+
+  const showStepButtons = step !== 'welcome' && step !== 'result'
+  const canGoPrev = step !== 'welcome'
+  const canGoNext =
+    (step === 'frame' && Boolean(selectedFrame)) ||
+    (step === 'edit' && Boolean(editDraft?.canProceed))
+  const prevButtonLabel = step === 'edit' ? 'retake' : 'previous'
+  const prevButtonSrc =
+    step === 'edit'
+      ? '/booth/retake_picture_button.svg'
+      : '/booth/prev_button.svg'
+  const nextButtonLabel = step === 'edit' ? 'complete' : 'next'
+  const nextButtonSrc =
+    step === 'edit' ? '/booth/complete_button.svg' : '/booth/next_button.svg'
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-neutral-900 px-3 py-4 sm:h-dvh sm:px-6 sm:py-10">
@@ -64,9 +112,11 @@ export default function Booth() {
           </span>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-white p-4 sm:rounded-2xl sm:p-8">
+        <div className="relative flex min-h-0 flex-1 flex-col rounded-xl bg-white p-4 pb-20 sm:rounded-2xl sm:p-8 sm:pb-24">
           {step === 'welcome' && <WelcomeStep onStart={handleStart} />}
-          {step === 'frame' && <FrameSelectStep onSelect={handleFrameSelected} />}
+          {step === 'frame' && (
+            <FrameSelectStep onSelectedChange={setSelectedFrame} />
+          )}
           {step === 'capture' && (
             <CaptureStep frame={selectedFrame} onDone={handleCaptureDone} />
           )}
@@ -74,7 +124,7 @@ export default function Booth() {
             <EditStep
               frame={selectedFrame}
               photos={photos}
-              onDone={handleEditDone}
+              onDraftChange={setEditDraft}
             />
           )}
           {step === 'result' && (
@@ -85,8 +135,48 @@ export default function Booth() {
               onReset={handleReset}
             />
           )}
+
+          {showStepButtons && (
+            <>
+              <StepNavButton
+                label={prevButtonLabel}
+                src={prevButtonSrc}
+                position="left"
+                disabled={!canGoPrev}
+                onClick={handlePrevStep}
+              />
+              <StepNavButton
+                label={nextButtonLabel}
+                src={nextButtonSrc}
+                position="right"
+                disabled={!canGoNext}
+                onClick={handleNextStep}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>
+  )
+}
+
+function StepNavButton({ label, src, position, disabled, onClick }) {
+  const positionClass =
+    position === 'left' ? 'left-4 sm:left-8' : 'right-4 sm:right-8'
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`absolute bottom-4 h-11 w-24 transition sm:bottom-6 sm:h-12 sm:w-28 ${positionClass} ${
+        disabled
+          ? 'cursor-not-allowed opacity-35 grayscale'
+          : 'hover:-translate-y-0.5 hover:drop-shadow-md active:translate-y-0'
+      }`}
+    >
+      <img src={src} alt="" className="h-full w-full object-contain" />
+    </button>
   )
 }

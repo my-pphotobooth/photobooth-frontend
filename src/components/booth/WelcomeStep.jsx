@@ -8,9 +8,15 @@ export default function WelcomeStep({ onStart }) {
       </p>
       <button
         onClick={onStart}
-        className="mt-2 rounded-xl bg-neutral-900 px-10 py-4 text-base text-white shadow-lg transition hover:bg-neutral-800 sm:mt-4 sm:text-lg sm:hover:scale-[1.02]"
+        className="mt-2 w-48 transition hover:scale-[1.02] active:scale-[0.98] sm:mt-4 sm:w-64"
+        aria-label="시작하기"
       >
-        시작하기
+        <img
+          src="/booth/start_button.svg"
+          alt=""
+          draggable="false"
+          className="block w-full"
+        />
       </button>
     </div>
   )

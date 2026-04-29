@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchFrames, fetchFrameCategories } from '../../api/frames'
 import FrameThumbnail from './FrameThumbnail'
 
-export default function FrameSelectStep({ onSelect }) {
+export default function FrameSelectStep({ onSelectedChange }) {
   const [categories, setCategories] = useState([])
   const [frames, setFrames] = useState([])
   const [status, setStatus] = useState('loading')
@@ -38,17 +38,22 @@ export default function FrameSelectStep({ onSelect }) {
     [frames, categoryId],
   )
   const category = categories.find((c) => c.id === categoryId)
-  const selected = framesInCategory.find((f) => f.id === selectedId)
 
   function handleCategoryChange(id) {
     setCategoryId(id)
     setSelectedId(null)
+    onSelectedChange?.(null)
+  }
+
+  function handleFrameClick(frame) {
+    setSelectedId(frame.id)
+    onSelectedChange?.(frame)
   }
 
   if (status === 'loading') {
     return (
       <div className="flex h-full items-center justify-center text-sm text-neutral-500">
-        프레임을 불러오는 중…
+        프레임을 불러오는 중...
       </div>
     )
   }
@@ -78,6 +83,7 @@ export default function FrameSelectStep({ onSelect }) {
           return (
             <button
               key={cat.id}
+              type="button"
               onClick={() => handleCategoryChange(cat.id)}
               className={`rounded-full border px-4 py-1 text-xs font-medium transition sm:px-6 sm:py-2 sm:text-sm ${
                 isActive
@@ -102,7 +108,8 @@ export default function FrameSelectStep({ onSelect }) {
             return (
               <button
                 key={frame.id}
-                onClick={() => setSelectedId(frame.id)}
+                type="button"
+                onClick={() => handleFrameClick(frame)}
                 className={`group flex w-24 flex-none snap-center flex-col items-center gap-2 rounded-xl border-2 p-2 transition sm:w-36 sm:p-3 ${
                   isSelected
                     ? 'border-neutral-900 bg-neutral-50'
@@ -118,16 +125,6 @@ export default function FrameSelectStep({ onSelect }) {
           })}
         </div>
       )}
-
-      <div className="flex justify-center">
-        <button
-          disabled={!selected}
-          onClick={() => onSelect(selected)}
-          className="rounded-xl bg-neutral-900 px-10 py-3 text-white shadow-lg transition disabled:cursor-not-allowed disabled:bg-neutral-300 enabled:hover:bg-neutral-800"
-        >
-          다음
-        </button>
-      </div>
     </div>
   )
 }
