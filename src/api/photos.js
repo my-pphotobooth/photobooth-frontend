@@ -13,9 +13,12 @@ export async function uploadPhoto(blob, { frameId, tapeId } = {}) {
   return res.json()
 }
 
-export async function fetchPhotos() {
-  const res = await fetch(`${API}/api/photos`)
+export async function fetchPhotos({ cursor, limit } = {}) {
+  const params = new URLSearchParams()
+  if (cursor) params.set('cursor', cursor)
+  if (limit) params.set('limit', String(limit))
+  const qs = params.toString()
+  const res = await fetch(`${API}/api/photos${qs ? `?${qs}` : ''}`)
   if (!res.ok) throw new Error(`fetch failed: ${res.status}`)
-  const data = await res.json()
-  return data.items
+  return res.json()
 }

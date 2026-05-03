@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchPhotos } from '../api/photos'
 import WallPhoto from '../components/wall/WallPhoto'
@@ -8,15 +8,21 @@ import { LeftArrow, RightArrow } from '../components/icons/Arrows'
 export default function Wall() {
   const [photos, setPhotos] = useState([])
   const [status, setStatus] = useState('loading')
+  const [cursor, setCursor] = useState(null)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [selectedPhoto, setSelectedPhoto] = useState(null)
+  const sentinelRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       try {
-        const result = await fetchPhotos()
+        const { items, nextCursor } = await fetchPhotos()
         if (cancelled) return
-        setPhotos(result)
+        setPhotos(items)
+        setCursor(nextCursor)
+        setHasMore(Boolean(nextCursor))
         setStatus('ready')
       } catch (err) {
         if (cancelled) return
@@ -28,6 +34,35 @@ export default function Wall() {
       cancelled = true
     }
   }, [])
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || !cursor) return
+    setLoadingMore(true)
+    try {
+      const { items, nextCursor } = await fetchPhotos({ cursor })
+      setPhotos((prev) => [...prev, ...items])
+      setCursor(nextCursor)
+      setHasMore(Boolean(nextCursor))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [cursor, hasMore, loadingMore])
+
+  useEffect(() => {
+    if (status !== 'ready' || !hasMore) return
+    const el = sentinelRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore()
+      },
+      { rootMargin: '400px 0px' },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [status, hasMore, loadMore])
 
   return (
     <div className="min-h-screen bg-amber-50 px-6 py-6 sm:py-10">
@@ -86,15 +121,35 @@ export default function Wall() {
         )}
 
         {status === 'ready' && photos.length > 0 && (
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-12 lg:grid-cols-4">
-            {photos.map((photo) => (
-              <WallPhoto
-                key={photo.id}
-                photo={photo}
-                onClick={() => setSelectedPhoto(photo)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-12 lg:grid-cols-4">
+              {photos.map((photo) => (
+                <WallPhoto
+                  key={photo.id}
+                  photo={photo}
+                  onClick={() => setSelectedPhoto(photo)}
+                />
+              ))}
+            </div>
+
+            {hasMore && (
+              <div
+                ref={sentinelRef}
+                className="flex justify-center py-10"
+              >
+                {loadingMore ? (
+                  <span className="text-sm text-neutral-500">불러오는 중…</span>
+                ) : (
+                  <button
+                    onClick={loadMore}
+                    className="rounded-xl bg-neutral-900 px-6 py-2.5 text-sm text-white hover:bg-neutral-800"
+                  >
+                    더 보기
+                  </button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 
