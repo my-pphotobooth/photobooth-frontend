@@ -1,53 +1,79 @@
+import { getFrameLayout, getFooterY } from '../../data/frames'
+
 export default function PreviewStrip({
   frame,
   photoUrls = [],
   overlays = [],
   filterCss = 'none',
 }) {
-  const slots = [0, 1, 2, 3]
+  const layout = getFrameLayout(frame)
+  const { width: cw, height: ch } = layout.canvas
+  const pct = (v, total) => `${(v / total) * 100}%`
+
   return (
     <div
-      className="flex aspect-2/6 w-full flex-col justify-between rounded-md p-2 shadow-md sm:p-3 lg:h-full lg:w-auto"
-      style={{ backgroundColor: frame.backgroundColor }}
+      className="relative w-full overflow-hidden rounded-md shadow-md lg:h-full lg:w-auto"
+      style={{ aspectRatio: `${cw} / ${ch}`, backgroundColor: frame.backgroundColor }}
     >
-      <div className="flex flex-col gap-1.5 sm:gap-2">
-        {slots.map((i) => (
-          <div
-            key={i}
-            className="relative aspect-4/3 w-full overflow-hidden rounded-sm"
-            style={{ backgroundColor: frame.slotColor }}
-          >
-            {photoUrls[i] && (
-              <img
-                src={photoUrls[i]}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover"
-                style={{ filter: filterCss }}
-              />
-            )}
-            {overlays[i] && (
-              <img
-                crossOrigin="anonymous"
-                src={overlays[i].src}
-                alt=""
-                draggable="false"
-                className="pointer-events-none absolute w-auto"
-                style={{
-                  right: `${overlays[i].right * 100}%`,
-                  bottom: `${overlays[i].bottom * 100}%`,
-                  height: `${overlays[i].height * 100}%`,
-                }}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-      <div
-        className="pt-1 text-center text-[8px] font-medium tracking-widest sm:text-[10px]"
-        style={{ color: frame.textColor }}
-      >
-        {frame.footerText}
-      </div>
+      {frame.frameImageUrl && (
+        <img
+          crossOrigin="anonymous"
+          src={frame.frameImageUrl}
+          alt=""
+          draggable="false"
+          className="pointer-events-none absolute inset-0 h-full w-full object-fill"
+        />
+      )}
+
+      {layout.slots.map((slot, i) => (
+        <div
+          key={i}
+          className="absolute overflow-hidden"
+          style={{
+            left: pct(slot.x, cw),
+            top: pct(slot.y, ch),
+            width: pct(slot.width, cw),
+            height: pct(slot.height, ch),
+            borderRadius:
+              slot.shape === 'ellipse'
+                ? '50%'
+                : `${((slot.radius || 0) / slot.width) * 100}%`,
+            backgroundColor: frame.slotColor,
+          }}
+        >
+          {photoUrls[i] && (
+            <img
+              src={photoUrls[i]}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ filter: filterCss }}
+            />
+          )}
+          {overlays[i] && (
+            <img
+              crossOrigin="anonymous"
+              src={overlays[i].src}
+              alt=""
+              draggable="false"
+              className="pointer-events-none absolute w-auto"
+              style={{
+                right: `${overlays[i].right * 100}%`,
+                bottom: `${overlays[i].bottom * 100}%`,
+                height: `${overlays[i].height * 100}%`,
+              }}
+            />
+          )}
+        </div>
+      ))}
+
+      {!frame.frameImageUrl && (
+        <div
+          className="absolute inset-x-0 -translate-y-1/2 text-center text-[8px] font-medium tracking-widest sm:text-[10px]"
+          style={{ top: pct(getFooterY(layout), ch), color: frame.textColor }}
+        >
+          {frame.footerText}
+        </div>
+      )}
     </div>
   )
 }

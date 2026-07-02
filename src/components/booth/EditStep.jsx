@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_FILTER_ID, filters, getFilterById } from '../../data/filters'
+import { getSlotCount } from '../../data/frames'
 import PreviewStrip from './PreviewStrip'
 
 export default function EditStep({ frame, photos, onDraftChange }) {
+  const slotCount = getSlotCount(frame)
   const [selectedIndices, setSelectedIndices] = useState([])
   const [filterId, setFilterId] = useState(DEFAULT_FILTER_ID)
   const [photoUrls, setPhotoUrls] = useState([])
@@ -20,7 +22,7 @@ export default function EditStep({ frame, photos, onDraftChange }) {
   const filter = getFilterById(filterId)
   const previewUrls = selectedIndices.map((i) => photoUrls[i])
   const previewOverlays = selectedIndices.map((i) => frame.overlays?.[i])
-  const canProceed = selectedIndices.length === 4
+  const canProceed = selectedIndices.length === slotCount
 
   useEffect(() => {
     onDraftChange?.({
@@ -36,7 +38,7 @@ export default function EditStep({ frame, photos, onDraftChange }) {
       if (existing !== -1) {
         return prev.filter((_, i) => i !== existing)
       }
-      if (prev.length >= 4) return prev
+      if (prev.length >= slotCount) return prev
       return [...prev, index]
     })
   }
@@ -46,9 +48,9 @@ export default function EditStep({ frame, photos, onDraftChange }) {
       <div className="flex shrink-0 flex-col sm:flex-row sm:items-baseline sm:justify-between">
         <h2 className="text-lg font-bold text-neutral-900 sm:text-xl">편집</h2>
         <span className="text-xs text-neutral-500 sm:text-sm">
-          마음에 드는 4장을 순서대로 골라주세요 ·{' '}
+          마음에 드는 {slotCount}장을 순서대로 골라주세요 ·{' '}
           <span className="font-medium text-neutral-800">
-            {selectedIndices.length}/4
+            {selectedIndices.length}/{slotCount}
           </span>
         </span>
       </div>

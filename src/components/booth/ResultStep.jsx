@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getFilterById } from '../../data/filters'
+import { getFrameLayout } from '../../data/frames'
 import { composeFrame } from '../../utils/compose'
 import { uploadPhoto } from '../../api/photos'
 import { fetchTapes } from '../../api/tapes'
 
 export default function ResultStep({ frame, photos, editResult, onReset }) {
+  const canvas = getFrameLayout(frame).canvas
+  const aspectRatio = `${canvas.width} / ${canvas.height}`
   const [composedBlob, setComposedBlob] = useState(null)
   const [status, setStatus] = useState('composing')
   const [errorMessage, setErrorMessage] = useState(null)
@@ -117,14 +120,18 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 sm:flex-row sm:gap-10">
         <div className="flex min-h-0 flex-1 items-center justify-center sm:h-full sm:flex-none">
           {status === 'composing' || !composedUrl ? (
-            <div className="flex aspect-2/6 w-32 items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-500 sm:h-full sm:w-auto sm:max-w-full">
+            <div
+              className="flex w-32 items-center justify-center rounded-lg bg-neutral-100 text-xs text-neutral-500 sm:h-full sm:w-auto sm:max-w-full"
+              style={{ aspectRatio }}
+            >
               합성하는 중...
             </div>
           ) : (
             <img
               src={composedUrl}
               alt="완성된 포토부스 사진"
-              className="aspect-2/6 w-32 rounded-lg object-contain shadow-xl sm:h-full sm:w-auto sm:max-w-full"
+              className="w-32 rounded-lg object-contain shadow-xl sm:h-full sm:w-auto sm:max-w-full"
+              style={{ aspectRatio }}
             />
           )}
         </div>

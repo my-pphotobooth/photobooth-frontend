@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCamera } from '../../hooks/useCamera'
+import { getSlotCount } from '../../data/frames'
 
-const TOTAL_SHOTS = 8
+const MIN_SHOTS = 8
 const COUNTDOWN_START = 3
 const PHOTO_ASPECT = 4 / 3
 
 export default function CaptureStep({ frame, onDone }) {
   const { videoRef, status, error, capture } = useCamera()
+  // 슬롯 수만큼은 최소로 찍고, 8컷 미만 프레임은 8컷 풀에서 고르게 한다.
+  const totalShots = Math.max(MIN_SHOTS, getSlotCount(frame))
   const [phase, setPhase] = useState('idle')
   const [count, setCount] = useState(COUNTDOWN_START)
   const [shotIndex, setShotIndex] = useState(0)
@@ -46,7 +49,7 @@ export default function CaptureStep({ frame, onDone }) {
   useEffect(() => {
     if (phase !== 'pause') return
     const timer = setTimeout(() => {
-      if (shotIndex < TOTAL_SHOTS - 1) {
+      if (shotIndex < totalShots - 1) {
         setShotIndex((i) => i + 1)
         setCount(COUNTDOWN_START)
         setPhase('countdown')
@@ -55,7 +58,7 @@ export default function CaptureStep({ frame, onDone }) {
       }
     }, 900)
     return () => clearTimeout(timer)
-  }, [phase, shotIndex])
+  }, [phase, shotIndex, totalShots])
 
   useEffect(() => {
     if (phase !== 'done') return
@@ -81,8 +84,8 @@ export default function CaptureStep({ frame, onDone }) {
   const isRunning = phase !== 'idle' && phase !== 'done'
   const progressLabel = `${Math.min(
     shotIndex + (phase === 'idle' ? 0 : 1),
-    TOTAL_SHOTS,
-  )} / ${TOTAL_SHOTS}`
+    totalShots,
+  )} / ${totalShots}`
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -141,7 +144,7 @@ export default function CaptureStep({ frame, onDone }) {
         </div>
       </div>
 
-      <PhotoStrip count={TOTAL_SHOTS} urls={previewUrls} />
+      <PhotoStrip count={totalShots} urls={previewUrls} />
 
       <div className="flex justify-center pt-2">
         {!isRunning && phase !== 'done' && (

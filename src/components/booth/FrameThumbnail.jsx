@@ -1,45 +1,70 @@
+import { getFrameLayout, getFooterY } from '../../data/frames'
+
 export default function FrameThumbnail({ frame }) {
-  const slotBg = frame.slotColor
+  const layout = getFrameLayout(frame)
+  const { width: cw, height: ch } = layout.canvas
+  const pct = (v, total) => `${(v / total) * 100}%`
   const showOverlays = Array.isArray(frame.overlays) && frame.overlays.length > 0
 
   return (
     <div
-      className="flex aspect-2/6 w-full flex-col justify-between rounded-md p-2 shadow-md"
-      style={{ backgroundColor: frame.backgroundColor }}
+      className="relative w-full overflow-hidden rounded-md shadow-md"
+      style={{ aspectRatio: `${cw} / ${ch}`, backgroundColor: frame.backgroundColor }}
     >
-      <div className="flex flex-col gap-1.5">
-        {[0, 1, 2, 3].map((i) => {
-          const overlay = showOverlays ? frame.overlays?.[i] : null
-          return (
-            <div
-              key={i}
-              className="relative aspect-4/3 w-full overflow-hidden rounded-sm"
-              style={{ backgroundColor: slotBg }}
-            >
-              {overlay && (
-                <img
-                  crossOrigin="anonymous"
-                  src={overlay.src}
-                  alt=""
-                  className="pointer-events-none absolute w-auto"
-                  style={{
-                    right: `${overlay.right * 100}%`,
-                    bottom: `${overlay.bottom * 100}%`,
-                    height: `${overlay.height * 100}%`,
-                  }}
-                  draggable="false"
-                />
-              )}
-            </div>
-          )
-        })}
-      </div>
-      <div
-        className="pt-1 text-center text-[8px] font-medium tracking-widest"
-        style={{ color: frame.textColor }}
-      >
-        {frame.footerText}
-      </div>
+      {frame.frameImageUrl && (
+        <img
+          crossOrigin="anonymous"
+          src={frame.frameImageUrl}
+          alt=""
+          draggable="false"
+          className="pointer-events-none absolute inset-0 h-full w-full object-fill"
+        />
+      )}
+
+      {layout.slots.map((slot, i) => {
+        const overlay = showOverlays ? frame.overlays?.[i] : null
+        return (
+          <div
+            key={i}
+            className="absolute overflow-hidden"
+            style={{
+              left: pct(slot.x, cw),
+              top: pct(slot.y, ch),
+              width: pct(slot.width, cw),
+              height: pct(slot.height, ch),
+              borderRadius:
+                slot.shape === 'ellipse'
+                  ? '50%'
+                  : `${((slot.radius || 0) / slot.width) * 100}%`,
+              backgroundColor: frame.slotColor,
+            }}
+          >
+            {overlay && (
+              <img
+                crossOrigin="anonymous"
+                src={overlay.src}
+                alt=""
+                draggable="false"
+                className="pointer-events-none absolute w-auto"
+                style={{
+                  right: `${overlay.right * 100}%`,
+                  bottom: `${overlay.bottom * 100}%`,
+                  height: `${overlay.height * 100}%`,
+                }}
+              />
+            )}
+          </div>
+        )
+      })}
+
+      {!frame.frameImageUrl && (
+        <div
+          className="absolute inset-x-0 -translate-y-1/2 text-center text-[8px] font-medium tracking-widest"
+          style={{ top: pct(getFooterY(layout), ch), color: frame.textColor }}
+        >
+          {frame.footerText}
+        </div>
+      )}
     </div>
   )
 }
