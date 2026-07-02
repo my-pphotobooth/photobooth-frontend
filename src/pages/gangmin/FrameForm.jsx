@@ -8,8 +8,14 @@ import {
   uploadAdminFile,
 } from '../../api/gangmin'
 import { composeFrame } from '../../utils/compose'
+import { DEFAULT_LAYOUT } from '../../data/frames'
+import SlotEditor from './SlotEditor'
 import { Spinner } from './ui'
 import { useToast } from './uiHooks'
+
+function freshLayout() {
+  return structuredClone(DEFAULT_LAYOUT)
+}
 
 const EMPTY_FORM = {
   name: '',
@@ -30,6 +36,8 @@ export default function FrameForm({ mode }) {
   const navigate = useNavigate()
   const [form, setForm] = useState(EMPTY_FORM)
   const [overlays, setOverlays] = useState([])
+  const [layout, setLayout] = useState(freshLayout)
+  const [frameImageUrl, setFrameImageUrl] = useState(null)
   const [categories, setCategories] = useState([])
   const [status, setStatus] = useState(mode === 'edit' ? 'loading' : 'ready')
   const [error, setError] = useState(null)
@@ -58,6 +66,8 @@ export default function FrameForm({ mode }) {
             sortOrder: frame.sortOrder,
           })
           setOverlays(Array.isArray(frame.overlays) ? frame.overlays : [])
+          setLayout(frame.layout ?? freshLayout())
+          setFrameImageUrl(frame.frameImageUrl ?? null)
           setStatus('ready')
         } else if (cats[0]) {
           setForm((f) => ({ ...f, categoryId: cats[0].id }))
@@ -98,6 +108,8 @@ export default function FrameForm({ mode }) {
           : null,
         sortOrder: Number(form.sortOrder) || 0,
         overlays: overlays.length > 0 ? overlays : null,
+        layout,
+        frameImageUrl: frameImageUrl || null,
       }
       if (mode === 'create') {
         await createFrame(payload)
@@ -124,7 +136,12 @@ export default function FrameForm({ mode }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_240px] lg:gap-8">
       <aside className="lg:order-2 lg:sticky lg:top-6 lg:self-start">
-        <LivePreview form={form} overlays={overlays} />
+        <LivePreview
+          form={form}
+          overlays={overlays}
+          layout={layout}
+          frameImageUrl={frameImageUrl}
+        />
       </aside>
 
       <form onSubmit={handleSubmit} className="space-y-4 lg:order-1 lg:min-w-0">
@@ -226,6 +243,22 @@ export default function FrameForm({ mode }) {
           </Field>
         </div>
 
+        <FrameImageField
+          frameImageUrl={frameImageUrl}
+          onChange={setFrameImageUrl}
+          onImageSize={(w, h) =>
+            setLayout((l) => ({ ...l, canvas: { width: w, height: h } }))
+          }
+        />
+
+        <SlotEditor
+          layout={layout}
+          frameImageUrl={frameImageUrl}
+          backgroundColor={form.backgroundColor}
+          slotColor={form.slotColor}
+          onChange={setLayout}
+        />
+
         <OverlayEditor overlays={overlays} onChange={setOverlays} />
 
         <div className="flex gap-2">
@@ -249,23 +282,26 @@ export default function FrameForm({ mode }) {
   )
 }
 
-function LivePreview({ form, overlays }) {
+function LivePreview({ form, overlays, layout, frameImageUrl }) {
   const [url, setUrl] = useState(null)
   const [error, setError] = useState(null)
   const [pending, setPending] = useState(false)
   const lastUrlRef = useRef(null)
+  const aspectRatio = `${layout.canvas.width} / ${layout.canvas.height}`
 
   useEffect(() => {
     let cancelled = false
     const timer = setTimeout(async () => {
       if (!cancelled) setPending(true)
       try {
-        const photoBlobs = makeDummyPhotoBlobs(form.slotColor)
+        const photoBlobs = makeDummyPhotoBlobs(form.slotColor, layout.slots.length)
         const blob = await composeFrame({
           frame: {
             backgroundColor: form.backgroundColor,
             textColor: form.textColor,
             footerText: form.footerText,
+            layout,
+            frameImageUrl,
           },
           photoBlobs,
           overlays,
@@ -287,7 +323,7 @@ function LivePreview({ form, overlays }) {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [form, overlays])
+  }, [form, overlays, layout, frameImageUrl])
 
   useEffect(() => {
     return () => {
@@ -308,10 +344,14 @@ function LivePreview({ form, overlays }) {
           <img
             src={url}
             alt=""
-            className="aspect-2/6 w-32 rounded-md bg-neutral-100 object-contain shadow-md sm:w-40 lg:w-full lg:max-w-50"
+            style={{ aspectRatio }}
+            className="w-32 rounded-md bg-neutral-100 object-contain shadow-md sm:w-40 lg:w-full lg:max-w-50"
           />
         ) : (
-          <div className="aspect-2/6 w-32 animate-pulse rounded-md bg-neutral-100 sm:w-40 lg:w-full lg:max-w-50" />
+          <div
+            style={{ aspectRatio }}
+            className="w-32 animate-pulse rounded-md bg-neutral-100 sm:w-40 lg:w-full lg:max-w-50"
+          />
         )}
       </div>
       {error && (
@@ -324,10 +364,94 @@ function LivePreview({ form, overlays }) {
   )
 }
 
-function makeDummyPhotoBlobs(slotColor) {
-  return [0, 1, 2, 3].map((i) => {
+function makeDummyPhotoBlobs(slotColor, count = 4) {
+  return Array.from({ length: count }, (_, i) => {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="${slotColor}"/><text x="400" y="380" text-anchor="middle" font-size="280" font-weight="bold" fill="rgba(0,0,0,0.12)" font-family="system-ui">${i + 1}</text></svg>`
     return new Blob([svg], { type: 'image/svg+xml' })
+  })
+}
+
+function FrameImageField({ frameImageUrl, onChange, onImageSize }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setBusy(true)
+    setError(null)
+    try {
+      const { url } = await uploadAdminFile(file)
+      const size = await readImageSize(url)
+      onChange(url)
+      if (size) onImageSize(size.width, size.height)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
+      <header className="flex items-center justify-between">
+        <h2 className="text-sm font-bold text-neutral-900">프레임 이미지</h2>
+        {frameImageUrl && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="rounded px-2 text-xs text-red-600 hover:bg-red-50"
+          >
+            제거
+          </button>
+        )}
+      </header>
+      <p className="text-xs text-neutral-500">
+        브랜딩이 포함된 프레임 이미지를 올리면 슬롯 위치에 자동으로 구멍을 뚫어
+        사진을 합성합니다. (이미지 프레임은 푸터 텍스트 생략) 업로드 시 캔버스
+        규격이 이미지 크기로 맞춰집니다.
+      </p>
+      <div className="flex items-center gap-3">
+        <div className="h-24 w-16 shrink-0 overflow-hidden rounded-md border border-neutral-300 bg-neutral-50">
+          {frameImageUrl ? (
+            <img
+              src={frameImageUrl}
+              alt=""
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-center text-[10px] text-neutral-400">
+              이미지
+              <br />
+              없음
+            </div>
+          )}
+        </div>
+        <div className="flex-1 space-y-1.5">
+          <input
+            type="file"
+            accept="image/png,image/jpeg"
+            onChange={handleFile}
+            disabled={busy}
+            className="block w-full text-xs"
+          />
+          {busy && <p className="text-xs text-neutral-500">업로드 중…</p>}
+          {error && <p className="text-xs text-red-600">{error}</p>}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function readImageSize(url) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () =>
+      resolve({ width: img.naturalWidth, height: img.naturalHeight })
+    img.onerror = () => resolve(null)
+    img.src = url
   })
 }
 

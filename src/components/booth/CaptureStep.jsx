@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCamera } from '../../hooks/useCamera'
-import { getSlotCount } from '../../data/frames'
+import { getShotCount } from '../../data/frames'
 
-const MIN_SHOTS = 8
 const COUNTDOWN_START = 3
 const PHOTO_ASPECT = 4 / 3
 
 export default function CaptureStep({ frame, onDone }) {
   const { videoRef, status, error, capture } = useCamera()
-  // 슬롯 수만큼은 최소로 찍고, 8컷 미만 프레임은 8컷 풀에서 고르게 한다.
-  const totalShots = Math.max(MIN_SHOTS, getSlotCount(frame))
+  // 프레임이 지정한 촬영 횟수(풀). 이 중 슬롯 수만큼 편집 단계에서 고른다.
+  const totalShots = getShotCount(frame)
   const [phase, setPhase] = useState('idle')
   const [count, setCount] = useState(COUNTDOWN_START)
   const [shotIndex, setShotIndex] = useState(0)
@@ -146,7 +145,7 @@ export default function CaptureStep({ frame, onDone }) {
 
       <PhotoStrip count={totalShots} urls={previewUrls} />
 
-      <div className="flex justify-center pt-2">
+      <div className="flex h-12 shrink-0 items-center justify-center sm:h-14">
         {!isRunning && phase !== 'done' && (
           <button
             type="button"
@@ -181,12 +180,14 @@ function Overlay({ children }) {
 
 function PhotoStrip({ count, urls }) {
   const slots = useMemo(() => Array.from({ length: count }), [count])
+  // 촬영 컷 수와 무관하게 항상 한 줄(고정 높이) + 넘치면 가로 스크롤.
+  // 그래야 위쪽 카메라 영역(flex-1)이 찌부러지지 않는다.
   return (
-    <div className="mx-auto grid w-full max-w-md grid-cols-4 gap-2 sm:max-w-none sm:grid-cols-8">
+    <div className="mx-auto flex w-full max-w-2xl shrink-0 justify-start gap-2 overflow-x-auto pb-1 sm:justify-center">
       {slots.map((_, i) => (
         <div
           key={i}
-          className="aspect-4/3 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100"
+          className="aspect-4/3 h-12 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 sm:h-14"
         >
           {urls[i] && (
             <img src={urls[i]} alt="" className="h-full w-full object-cover" />
