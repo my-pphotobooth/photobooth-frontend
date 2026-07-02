@@ -3,9 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   createBasicLayout,
   fetchAdminBasicLayout,
+  fetchAdminBasicLayouts,
   updateBasicLayout,
 } from '../../api/gangmin'
 import { DEFAULT_LAYOUT } from '../../data/frames'
+import { nextSortOrder } from './sortOrder'
 import SlotEditor from './SlotEditor'
 import { Spinner } from './ui'
 import { useToast } from './uiHooks'
@@ -27,22 +29,30 @@ export default function BasicLayoutForm({ mode }) {
   const toast = useToast()
 
   useEffect(() => {
-    if (mode !== 'edit') return
     let cancelled = false
-    fetchAdminBasicLayout(id)
-      .then((row) => {
-        if (cancelled) return
-        setName(row.name)
-        setFooterText(row.footerText)
-        setSortOrder(row.sortOrder)
-        setLayout(row.layout ?? freshLayout())
-        setStatus('ready')
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setError(err.message)
-        setStatus('error')
-      })
+    if (mode === 'edit') {
+      fetchAdminBasicLayout(id)
+        .then((row) => {
+          if (cancelled) return
+          setName(row.name)
+          setFooterText(row.footerText)
+          setSortOrder(row.sortOrder)
+          setLayout(row.layout ?? freshLayout())
+          setStatus('ready')
+        })
+        .catch((err) => {
+          if (cancelled) return
+          setError(err.message)
+          setStatus('error')
+        })
+    } else {
+      // 새 규격: 마지막 정렬 순서 + 1을 기본값으로
+      fetchAdminBasicLayouts()
+        .then((rows) => {
+          if (!cancelled) setSortOrder(nextSortOrder(rows))
+        })
+        .catch(() => {})
+    }
     return () => {
       cancelled = true
     }

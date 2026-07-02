@@ -5,6 +5,7 @@ import {
   fetchAdminTapes,
   updateTape,
 } from '../../api/gangmin'
+import { nextSortOrder } from './sortOrder'
 import { EmptyState, ErrorBanner, Spinner } from './ui'
 import { useConfirm, useToast } from './uiHooks'
 
@@ -50,6 +51,8 @@ export default function Tapes() {
       </header>
 
       <NewTapeForm
+        key={nextSortOrder(items)}
+        defaultOrder={nextSortOrder(items)}
         onCreated={() => {
           toast.success('테이프를 추가했어요')
           reload()
@@ -83,9 +86,9 @@ export default function Tapes() {
   )
 }
 
-function NewTapeForm({ onCreated, onError }) {
+function NewTapeForm({ defaultOrder = 0, onCreated, onError }) {
   const [name, setName] = useState('')
-  const [sortOrder, setSortOrder] = useState(0)
+  const [sortOrder, setSortOrder] = useState(defaultOrder)
   const [file, setFile] = useState(null)
   const [busy, setBusy] = useState(false)
   const fileInputRef = useRef(null)
@@ -101,7 +104,7 @@ function NewTapeForm({ onCreated, onError }) {
         sortOrder: Number(sortOrder) || 0,
       })
       setName('')
-      setSortOrder(0)
+      setSortOrder(defaultOrder)
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       onCreated()

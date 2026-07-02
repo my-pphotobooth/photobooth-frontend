@@ -5,6 +5,7 @@ import {
   fetchAdminColorChips,
   updateColorChip,
 } from '../../api/gangmin'
+import { nextSortOrder } from './sortOrder'
 import { EmptyState, ErrorBanner, Spinner } from './ui'
 import { useConfirm, useToast } from './uiHooks'
 
@@ -49,8 +50,8 @@ export default function ColorChips() {
       </p>
 
       <ChipForm
-        key="new"
-        initial={NEW_CHIP}
+        key={`new-${nextSortOrder(items)}`}
+        initial={{ ...NEW_CHIP, sortOrder: nextSortOrder(items) }}
         submitLabel="추가"
         onSubmit={async (data) => {
           await createColorChip(data)

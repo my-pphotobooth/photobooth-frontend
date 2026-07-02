@@ -6,6 +6,7 @@ import {
   fetchAdminFrames,
   updateCategory,
 } from '../../api/gangmin'
+import { nextSortOrder } from './sortOrder'
 import { EmptyState, ErrorBanner, Spinner } from './ui'
 import { useConfirm, useToast } from './uiHooks'
 
@@ -65,6 +66,8 @@ export default function Categories() {
       </header>
 
       <NewCategoryRow
+        key={nextSortOrder(items)}
+        defaultOrder={nextSortOrder(items)}
         onCreated={() => {
           toast.success('카테고리를 추가했어요')
           reload()
@@ -99,9 +102,9 @@ export default function Categories() {
   )
 }
 
-function NewCategoryRow({ onCreated, onError }) {
+function NewCategoryRow({ defaultOrder = 0, onCreated, onError }) {
   const [name, setName] = useState('')
-  const [sortOrder, setSortOrder] = useState(0)
+  const [sortOrder, setSortOrder] = useState(defaultOrder)
   const [isBasic, setIsBasic] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -116,7 +119,7 @@ function NewCategoryRow({ onCreated, onError }) {
         isBasic,
       })
       setName('')
-      setSortOrder(0)
+      setSortOrder(defaultOrder)
       setIsBasic(false)
       onCreated()
     } catch (err) {

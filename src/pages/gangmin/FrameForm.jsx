@@ -5,11 +5,13 @@ import {
   fetchAdminBasicLayouts,
   fetchAdminCategories,
   fetchAdminFrame,
+  fetchAdminFrames,
   updateFrame,
   uploadAdminFile,
 } from '../../api/gangmin'
 import { composeFrame } from '../../utils/compose'
 import { DEFAULT_LAYOUT } from '../../data/frames'
+import { nextSortOrder } from './sortOrder'
 import SlotEditor from './SlotEditor'
 import { Spinner } from './ui'
 import { useToast } from './uiHooks'
@@ -41,6 +43,7 @@ export default function FrameForm({ mode }) {
   const [frameImageUrl, setFrameImageUrl] = useState(null)
   const [categories, setCategories] = useState([])
   const [basicLayouts, setBasicLayouts] = useState([])
+  const [frames, setFrames] = useState([])
   const [status, setStatus] = useState(mode === 'edit' ? 'loading' : 'ready')
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -50,9 +53,10 @@ export default function FrameForm({ mode }) {
     let cancelled = false
     ;(async () => {
       try {
-        const [cats, bls] = await Promise.all([
+        const [cats, bls, frs] = await Promise.all([
           fetchAdminCategories(),
           fetchAdminBasicLayouts(),
+          mode === 'create' ? fetchAdminFrames() : Promise.resolve([]),
         ])
         if (cancelled) return
         setCategories(cats)
@@ -75,8 +79,16 @@ export default function FrameForm({ mode }) {
           setLayout(frame.layout ?? freshLayout())
           setFrameImageUrl(frame.frameImageUrl ?? null)
           setStatus('ready')
-        } else if (cats[0]) {
-          setForm((f) => ({ ...f, categoryId: cats[0].id }))
+        } else {
+          setFrames(frs)
+          const catId = cats[0]?.id ?? ''
+          setForm((f) => ({
+            ...f,
+            categoryId: catId,
+            sortOrder: nextSortOrder(
+              frs.filter((fr) => fr.categoryId === catId),
+            ),
+          }))
         }
       } catch (err) {
         if (!cancelled) {
@@ -92,6 +104,19 @@ export default function FrameForm({ mode }) {
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
+  }
+
+  // 카테고리를 바꾸면(새 프레임일 때) 그 카테고리의 마지막 정렬 순서 + 1로 갱신
+  function handleCategoryChange(categoryId) {
+    setForm((f) => {
+      const next = { ...f, categoryId }
+      if (mode === 'create') {
+        next.sortOrder = nextSortOrder(
+          frames.filter((fr) => fr.categoryId === categoryId),
+        )
+      }
+      return next
+    })
   }
 
   async function handleSubmit(e) {
@@ -176,7 +201,7 @@ export default function FrameForm({ mode }) {
           <Field label="카테고리">
             <select
               value={form.categoryId}
-              onChange={(e) => update('categoryId', e.target.value)}
+              onChange={(e) => handleCategoryChange(e.target.value)}
               required
               className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             >
