@@ -102,6 +102,7 @@ export default function Categories() {
 function NewCategoryRow({ onCreated, onError }) {
   const [name, setName] = useState('')
   const [sortOrder, setSortOrder] = useState(0)
+  const [isBasic, setIsBasic] = useState(false)
   const [busy, setBusy] = useState(false)
 
   async function handleSubmit(e) {
@@ -112,9 +113,11 @@ function NewCategoryRow({ onCreated, onError }) {
       await createCategory({
         name: name.trim(),
         sortOrder: Number(sortOrder) || 0,
+        isBasic,
       })
       setName('')
       setSortOrder(0)
+      setIsBasic(false)
       onCreated()
     } catch (err) {
       onError(err.message)
@@ -126,7 +129,7 @@ function NewCategoryRow({ onCreated, onError }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-3 sm:flex-row"
+      className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-3 sm:flex-row sm:items-center"
     >
       <input
         value={name}
@@ -141,6 +144,14 @@ function NewCategoryRow({ onCreated, onError }) {
         placeholder="정렬"
         className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm sm:w-24"
       />
+      <label className="flex shrink-0 items-center gap-1.5 text-xs text-neutral-600">
+        <input
+          type="checkbox"
+          checked={isBasic}
+          onChange={(e) => setIsBasic(e.target.checked)}
+        />
+        기본 규격
+      </label>
       <button
         type="submit"
         disabled={busy || !name.trim()}
@@ -156,6 +167,7 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(item.name)
   const [sortOrder, setSortOrder] = useState(item.sortOrder)
+  const [isBasic, setIsBasic] = useState(item.isBasic)
   const [busy, setBusy] = useState(false)
   const toast = useToast()
   const confirm = useConfirm()
@@ -167,6 +179,7 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
       await updateCategory(item.id, {
         name: name.trim(),
         sortOrder: Number(sortOrder) || 0,
+        isBasic,
       })
       setEditing(false)
       toast.success('수정했어요')
@@ -181,6 +194,7 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
   function cancel() {
     setName(item.name)
     setSortOrder(item.sortOrder)
+    setIsBasic(item.isBasic)
     setEditing(false)
   }
 
@@ -221,6 +235,14 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
           onChange={(e) => setSortOrder(e.target.value)}
           className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm sm:w-24"
         />
+        <label className="flex shrink-0 items-center gap-1.5 text-xs text-neutral-600">
+          <input
+            type="checkbox"
+            checked={isBasic}
+            onChange={(e) => setIsBasic(e.target.checked)}
+          />
+          기본 규격
+        </label>
         <div className="flex gap-2">
           <button
             onClick={save}
@@ -244,11 +266,18 @@ function CategoryRow({ item, frameCount, onChanged, onError }) {
   return (
     <li className="flex items-center justify-between gap-3 p-3">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-neutral-900">
-          {item.name}
+        <p className="flex items-center gap-2 text-sm font-medium text-neutral-900">
+          <span className="truncate">{item.name}</span>
+          {item.isBasic && (
+            <span className="shrink-0 rounded-full bg-neutral-900 px-2 py-0.5 text-[10px] font-medium text-white">
+              기본 규격
+            </span>
+          )}
         </p>
         <p className="flex flex-wrap gap-x-3 text-xs text-neutral-500">
-          <span>프레임 {frameCount}개</span>
+          <span>
+            {item.isBasic ? '규격+칩 방식' : `프레임 ${frameCount}개`}
+          </span>
           <span>정렬 순서 {item.sortOrder}</span>
         </p>
       </div>

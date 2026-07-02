@@ -1,6 +1,6 @@
 import { getFrameLayout, getFooterY } from '../../data/frames'
 
-export default function FrameThumbnail({ frame }) {
+export default function FrameThumbnail({ frame, heightClass = 'h-44 sm:h-64' }) {
   const layout = getFrameLayout(frame)
   const { width: cw, height: ch } = layout.canvas
   const pct = (v, total) => `${(v / total) * 100}%`
@@ -9,7 +9,7 @@ export default function FrameThumbnail({ frame }) {
 
   return (
     <div
-      className="@container relative h-44 w-auto shrink-0 overflow-hidden rounded-md shadow-md sm:h-64"
+      className={`@container relative w-auto shrink-0 overflow-hidden rounded-md shadow-md ${heightClass}`}
       style={{ aspectRatio: `${cw} / ${ch}`, backgroundColor: frame.backgroundColor }}
     >
       {frame.frameImageUrl && (

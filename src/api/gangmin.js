@@ -102,6 +102,32 @@ export const deleteFrame = (id) => jreq('DELETE', `/api/gangmin/frames/${id}`)
 
 export const cleanupUploads = () => jreq('POST', '/api/gangmin/cleanup-uploads')
 
+// ----- Basic layouts (기본 규격) -----
+export async function fetchAdminBasicLayouts() {
+  const data = await jreq('GET', '/api/gangmin/basic-layouts')
+  return data.items
+}
+export const fetchAdminBasicLayout = (id) =>
+  jreq('GET', `/api/gangmin/basic-layouts/${id}`)
+export const createBasicLayout = (data) =>
+  jreq('POST', '/api/gangmin/basic-layouts', data)
+export const updateBasicLayout = (id, data) =>
+  jreq('PATCH', `/api/gangmin/basic-layouts/${id}`, data)
+export const deleteBasicLayout = (id) =>
+  jreq('DELETE', `/api/gangmin/basic-layouts/${id}`)
+
+// ----- Color chips (컬러칩) -----
+export async function fetchAdminColorChips() {
+  const data = await jreq('GET', '/api/gangmin/color-chips')
+  return data.items
+}
+export const createColorChip = (data) =>
+  jreq('POST', '/api/gangmin/color-chips', data)
+export const updateColorChip = (id, data) =>
+  jreq('PATCH', `/api/gangmin/color-chips/${id}`, data)
+export const deleteColorChip = (id) =>
+  jreq('DELETE', `/api/gangmin/color-chips/${id}`)
+
 export async function fetchAdminPhotos({ cursor, limit } = {}) {
   const qs = new URLSearchParams()
   if (cursor) qs.set('cursor', cursor)

@@ -8,6 +8,9 @@ import Dashboard from './pages/gangmin/Dashboard'
 import Categories from './pages/gangmin/Categories'
 import Frames from './pages/gangmin/Frames'
 import FrameForm from './pages/gangmin/FrameForm'
+import BasicLayouts from './pages/gangmin/BasicLayouts'
+import BasicLayoutForm from './pages/gangmin/BasicLayoutForm'
+import ColorChips from './pages/gangmin/ColorChips'
 import Tapes from './pages/gangmin/Tapes'
 import Photos from './pages/gangmin/Photos'
 import InAppBrowserGuard from './components/InAppBrowserGuard'
@@ -27,6 +30,16 @@ export default function App() {
             <Route path="frames" element={<Frames />} />
             <Route path="frames/new" element={<FrameForm mode="create" />} />
             <Route path="frames/:id/edit" element={<FrameForm mode="edit" />} />
+            <Route path="basic-layouts" element={<BasicLayouts />} />
+            <Route
+              path="basic-layouts/new"
+              element={<BasicLayoutForm mode="create" />}
+            />
+            <Route
+              path="basic-layouts/:id/edit"
+              element={<BasicLayoutForm mode="edit" />}
+            />
+            <Route path="color-chips" element={<ColorChips />} />
             <Route path="tapes" element={<Tapes />} />
             <Route path="photos" element={<Photos />} />
           </Route>

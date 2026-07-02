@@ -67,6 +67,8 @@ export default function GangminLayout() {
                 대시보드
               </Tab>
               <Tab to="/gangmin/categories">카테고리</Tab>
+              <Tab to="/gangmin/basic-layouts">기본 규격</Tab>
+              <Tab to="/gangmin/color-chips">컬러칩</Tab>
               <Tab to="/gangmin/frames">프레임</Tab>
               <Tab to="/gangmin/tapes">테이프</Tab>
               <Tab to="/gangmin/photos">사진</Tab>
