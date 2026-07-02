@@ -49,6 +49,15 @@ export function getSlotCount(frame) {
   return getFrameLayout(frame).slots.length
 }
 
+// 촬영 시 사용할 사진 비율 = 프레임 슬롯의 가로/세로 비율.
+// 촬영 미리보기와 저장본을 일치시켜 원치 않는 크롭을 막는다. 슬롯 없으면 4:3.
+// (슬롯 비율이 제각각인 프레임은 첫 슬롯 기준)
+export function getSlotAspect(frame) {
+  const s = getFrameLayout(frame).slots[0]
+  if (!s || !s.width || !s.height) return 4 / 3
+  return s.width / s.height
+}
+
 // 촬영 횟수(촬영 풀 크기). 프레임이 지정한 shotCount를 쓰되,
 // 없거나 슬롯 수보다 작으면 max(8, 슬롯수)로 폴백.
 export function getShotCount(frame) {

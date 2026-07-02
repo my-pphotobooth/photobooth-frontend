@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCamera } from '../../hooks/useCamera'
-import { getShotCount } from '../../data/frames'
+import { getShotCount, getSlotAspect } from '../../data/frames'
 
 const COUNTDOWN_START = 3
-const PHOTO_ASPECT = 4 / 3
 
 export default function CaptureStep({ frame, onDone }) {
   const { videoRef, status, error, capture } = useCamera()
   // 프레임이 지정한 촬영 횟수(풀). 이 중 슬롯 수만큼 편집 단계에서 고른다.
   const totalShots = getShotCount(frame)
+  // 촬영 미리보기·캡처 비율 = 슬롯 비율 (저장본과 일치, 크롭 방지)
+  const photoAspect = getSlotAspect(frame)
   const [phase, setPhase] = useState('idle')
   const [count, setCount] = useState(COUNTDOWN_START)
   const [shotIndex, setShotIndex] = useState(0)
@@ -21,7 +22,7 @@ export default function CaptureStep({ frame, onDone }) {
     if (count === 0) {
       let cancelled = false
       ;(async () => {
-        const blob = await capture({ aspectRatio: PHOTO_ASPECT })
+        const blob = await capture({ aspectRatio: photoAspect })
         if (cancelled || !blob) return
         capturedRef.current = [...capturedRef.current, blob]
         setPreviewUrls((prev) => {
@@ -37,7 +38,7 @@ export default function CaptureStep({ frame, onDone }) {
     }
     const timer = setTimeout(() => setCount((c) => c - 1), 1000)
     return () => clearTimeout(timer)
-  }, [phase, count, capture])
+  }, [phase, count, capture, photoAspect])
 
   useEffect(() => {
     if (phase !== 'flash') return
@@ -96,7 +97,12 @@ export default function CaptureStep({ frame, onDone }) {
       </div>
 
       <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 items-center justify-center">
-        <div className="relative aspect-4/3 max-h-full w-full overflow-hidden rounded-2xl bg-black">
+        <div
+          className={`relative overflow-hidden rounded-2xl bg-black ${
+            photoAspect < 1 ? 'h-full max-w-full' : 'w-full max-h-full'
+          }`}
+          style={{ aspectRatio: photoAspect }}
+        >
           <video
             ref={videoRef}
             playsInline
@@ -143,7 +149,7 @@ export default function CaptureStep({ frame, onDone }) {
         </div>
       </div>
 
-      <PhotoStrip count={totalShots} urls={previewUrls} />
+      <PhotoStrip count={totalShots} urls={previewUrls} aspect={photoAspect} />
 
       <div className="flex h-12 shrink-0 items-center justify-center sm:h-14">
         {!isRunning && phase !== 'done' && (
@@ -178,7 +184,7 @@ function Overlay({ children }) {
   )
 }
 
-function PhotoStrip({ count, urls }) {
+function PhotoStrip({ count, urls, aspect = 4 / 3 }) {
   const slots = useMemo(() => Array.from({ length: count }), [count])
   // 촬영 컷 수와 무관하게 항상 한 줄(고정 높이) + 넘치면 가로 스크롤.
   // 그래야 위쪽 카메라 영역(flex-1)이 찌부러지지 않는다.
@@ -187,7 +193,8 @@ function PhotoStrip({ count, urls }) {
       {slots.map((_, i) => (
         <div
           key={i}
-          className="aspect-4/3 h-12 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 sm:h-14"
+          style={{ aspectRatio: aspect }}
+          className="h-12 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 sm:h-14"
         >
           {urls[i] && (
             <img src={urls[i]} alt="" className="h-full w-full object-cover" />

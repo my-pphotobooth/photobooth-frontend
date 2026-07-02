@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_FILTER_ID, filters, getFilterById } from '../../data/filters'
-import { getSlotCount } from '../../data/frames'
+import { getSlotAspect, getSlotCount } from '../../data/frames'
 import { withChip } from '../../data/basicFrame'
 import PreviewStrip from './PreviewStrip'
 
@@ -82,6 +82,7 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
             selectedIndices={selectedIndices}
             onToggle={toggle}
             filterCss={filter.css}
+            aspect={getSlotAspect(frame)}
           />
         </div>
       </div>
@@ -128,7 +129,7 @@ function ColorChipTabs({ chips, selectedId, onSelect }) {
   )
 }
 
-function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
+function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss, aspect = 4 / 3 }) {
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:h-full lg:auto-cols-max lg:grid-cols-none lg:grid-flow-col lg:grid-rows-2 lg:gap-3 lg:overflow-x-auto lg:pb-1">
       {urls.map((url, i) => {
@@ -140,7 +141,8 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss }) {
             key={i}
             type="button"
             onClick={() => onToggle(i)}
-            className={`relative aspect-4/3 overflow-hidden rounded-md border-2 transition lg:h-full lg:w-auto ${
+            style={{ aspectRatio: aspect }}
+            className={`relative overflow-hidden rounded-md border-2 transition lg:h-full lg:w-auto ${
               isSelected
                 ? 'border-neutral-900'
                 : 'border-transparent hover:border-neutral-300'
