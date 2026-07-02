@@ -21,7 +21,8 @@ export default function SlotEditor({
   const pct = (v, total) => `${(v / total) * 100}%`
 
   function commit(nextSlots, extra) {
-    const shotCount = Math.max(layout.shotCount ?? 0, nextSlots.length)
+    // shotCount 없는(예전) 레이아웃은 기본 8로 취급 — getShotCount 폴백과 일치
+    const shotCount = Math.max(layout.shotCount ?? 8, nextSlots.length)
     onChange({ ...layout, ...extra, shotCount, slots: nextSlots })
   }
 
@@ -272,7 +273,7 @@ export default function SlotEditor({
             type="number"
             min={slots.length}
             max={30}
-            value={layout.shotCount ?? slots.length}
+            value={layout.shotCount ?? Math.max(8, slots.length)}
             onChange={(e) =>
               onChange({
                 ...layout,
