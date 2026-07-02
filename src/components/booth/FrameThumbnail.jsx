@@ -5,10 +5,11 @@ export default function FrameThumbnail({ frame }) {
   const { width: cw, height: ch } = layout.canvas
   const pct = (v, total) => `${(v / total) * 100}%`
   const showOverlays = Array.isArray(frame.overlays) && frame.overlays.length > 0
+  const footerY = getFooterY(layout)
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-md shadow-md"
+      className="@container relative h-44 w-auto shrink-0 overflow-hidden rounded-md shadow-md sm:h-64"
       style={{ aspectRatio: `${cw} / ${ch}`, backgroundColor: frame.backgroundColor }}
     >
       {frame.frameImageUrl && (
@@ -57,10 +58,15 @@ export default function FrameThumbnail({ frame }) {
         )
       })}
 
-      {!frame.frameImageUrl && (
+      {!frame.frameImageUrl && footerY != null && (
         <div
-          className="absolute inset-x-0 -translate-y-1/2 text-center text-[8px] font-medium tracking-widest"
-          style={{ top: pct(getFooterY(layout), ch), color: frame.textColor }}
+          className="absolute inset-x-0 -translate-y-1/2 overflow-hidden text-center font-medium tracking-widest whitespace-nowrap"
+          style={{
+            top: pct(footerY, ch),
+            color: frame.textColor,
+            // 합성(캔버스 28px)과 동일 비율로 프레임 폭에 맞춰 스케일
+            fontSize: `${(2800 / cw).toFixed(3)}cqw`,
+          }}
         >
           {frame.footerText}
         </div>

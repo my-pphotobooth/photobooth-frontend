@@ -9,10 +9,11 @@ export default function PreviewStrip({
   const layout = getFrameLayout(frame)
   const { width: cw, height: ch } = layout.canvas
   const pct = (v, total) => `${(v / total) * 100}%`
+  const footerY = getFooterY(layout)
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-md shadow-md lg:h-full lg:w-auto"
+      className="@container relative w-full overflow-hidden rounded-md shadow-md lg:h-full lg:w-auto"
       style={{ aspectRatio: `${cw} / ${ch}`, backgroundColor: frame.backgroundColor }}
     >
       {frame.frameImageUrl && (
@@ -66,10 +67,14 @@ export default function PreviewStrip({
         </div>
       ))}
 
-      {!frame.frameImageUrl && (
+      {!frame.frameImageUrl && footerY != null && (
         <div
-          className="absolute inset-x-0 -translate-y-1/2 text-center text-[8px] font-medium tracking-widest sm:text-[10px]"
-          style={{ top: pct(getFooterY(layout), ch), color: frame.textColor }}
+          className="absolute inset-x-0 -translate-y-1/2 overflow-hidden text-center font-medium tracking-widest whitespace-nowrap"
+          style={{
+            top: pct(footerY, ch),
+            color: frame.textColor,
+            fontSize: `${(2800 / cw).toFixed(3)}cqw`,
+          }}
         >
           {frame.footerText}
         </div>

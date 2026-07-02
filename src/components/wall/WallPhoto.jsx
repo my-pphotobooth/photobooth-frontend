@@ -5,12 +5,12 @@ export default function WallPhoto({ photo, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="group relative block w-full transition hover:z-10 hover:scale-[1.02]"
+      className="group relative block transition hover:z-10 hover:scale-[1.02]"
       style={{ transform: `rotate(${angle}deg)` }}
     >
       {photo.tape && (
         <div
-          className="pointer-events-none absolute left-1/2 top-0 z-10 w-[80%]"
+          className="pointer-events-none absolute left-1/2 top-0 z-10 w-20 sm:w-24 lg:w-28"
           style={{ transform: `translate(-50%, -50%) rotate(${tapeAngle}deg)` }}
         >
           <img
@@ -24,7 +24,7 @@ export default function WallPhoto({ photo, onClick }) {
       <img
         src={photo.url}
         alt=""
-        className="w-full rounded-sm bg-white shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
+        className="h-72 w-auto rounded-sm bg-white shadow-[0_6px_20px_rgba(0,0,0,0.15)] sm:h-96 lg:h-112"
         draggable="false"
       />
     </button>

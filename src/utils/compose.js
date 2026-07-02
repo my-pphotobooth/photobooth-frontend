@@ -79,15 +79,19 @@ export async function composeFrame({
     }
   } else {
     // 색상 프레임: 푸터 텍스트를 그린다. (이미지 프레임은 자체 브랜딩 포함 → 생략)
-    ctx.fillStyle = frame.textColor
-    ctx.font =
-      '500 28px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    if ('letterSpacing' in ctx) {
-      ctx.letterSpacing = '4px'
+    // 하단 여백이 부족하면(getFooterY === null) 그리지 않아 프레임 밖으로 안 넘친다.
+    const footerY = getFooterY(layout)
+    if (footerY != null && frame.footerText) {
+      ctx.fillStyle = frame.textColor
+      ctx.font =
+        '500 28px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      if ('letterSpacing' in ctx) {
+        ctx.letterSpacing = '4px'
+      }
+      ctx.fillText(frame.footerText, canvasWidth / 2, footerY)
     }
-    ctx.fillText(frame.footerText, canvasWidth / 2, getFooterY(layout))
   }
 
   return new Promise((resolve, reject) => {

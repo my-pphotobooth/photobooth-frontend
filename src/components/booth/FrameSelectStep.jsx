@@ -110,10 +110,10 @@ export default function FrameSelectStep({ onSelectedChange }) {
                 key={frame.id}
                 type="button"
                 onClick={() => handleFrameClick(frame)}
-                className={`group flex w-24 flex-none snap-center flex-col items-center gap-2 rounded-xl border-2 p-2 transition sm:w-36 sm:p-3 ${
+                className={`group flex flex-none snap-center flex-col items-center gap-2 rounded-xl border-2 p-2 transition sm:p-3 ${
                   isSelected
-                    ? 'border-neutral-900 bg-neutral-50'
-                    : 'border-transparent hover:border-neutral-300'
+                    ? 'border-neutral-300 bg-neutral-50'
+                    : 'border-transparent hover:border-neutral-200'
                 }`}
               >
                 <FrameThumbnail frame={frame} />
