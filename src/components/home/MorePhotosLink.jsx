@@ -26,7 +26,7 @@ function PhotosTextHorizontal({ className }) {
       className={className}
       aria-hidden="true"
     >
-      <g stroke="black" strokeWidth="10" strokeLinecap="round">
+      <g stroke="black" strokeWidth="15" strokeLinecap="round">
         <path d="M94.7686 58.4742C81.5245 103.318 49.782 194.132 37.7709 232.367C27.6328 260.345 23.3829 272.02 19.4931 279.858C17.8441 283.785 16.8544 287.608 15.8347 291.548" />
         <path d="M65.418 172.623C91.6753 192.07 154.535 225.696 175.013 239.374C183.581 245.099 191.567 250.865 199.538 257.238C203.532 260.14 207.423 262.367 215.185 264.399" />
         <path d="M317.348 74.9714L296.256 316.051" />
@@ -62,7 +62,7 @@ function PhotosTextVertical({ className }) {
       className={className}
       aria-hidden="true"
     >
-      <g stroke="black" strokeWidth="10" strokeLinecap="round">
+      <g stroke="black" strokeWidth="20" strokeLinecap="round">
         <path d="M124 5.00134C107.66 48.8123 69.66 137.191 55.011 174.495C42.946 201.697 37.892 213.047 33.465 220.595C31.546 224.397 30.292 228.142 29 232.001" />
         <path d="M90 111.001C114.837 132.232 175.198 170.161 194.672 185.235C202.819 191.544 210.383 197.852 217.891 204.766C221.673 207.939 225.398 210.432 233 213.001" />
         <path d="M328 28.0013V270.001" />
