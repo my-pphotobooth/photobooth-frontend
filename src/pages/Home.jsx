@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import BoothIllustration from '../components/home/BoothIllustration'
 import MorePhotosLink from '../components/home/MorePhotosLink'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function Home() {
   const [mirrorOn, setMirrorOn] = useState(false)
+  useDocumentTitle()
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-amber-50 px-4 py-8 sm:py-12 lg:py-16">

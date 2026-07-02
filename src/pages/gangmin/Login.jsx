@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { login } from '../../api/gangmin'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 export default function Login() {
+  useDocumentTitle('관리자')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)

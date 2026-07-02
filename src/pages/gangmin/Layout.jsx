@@ -9,11 +9,13 @@ import {
 } from 'react-router-dom'
 import { getToken, logout } from '../../api/gangmin'
 import { LeftArrow } from '../../components/icons/Arrows'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { ConfirmProvider, ToastProvider } from './ui'
 
 export default function GangminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
+  useDocumentTitle('관리자')
 
   useEffect(() => {
     const meta = document.createElement('meta')

@@ -7,6 +7,7 @@ import FrameSelectStep from '../components/booth/FrameSelectStep'
 import CaptureStep from '../components/booth/CaptureStep'
 import EditStep from '../components/booth/EditStep'
 import ResultStep from '../components/booth/ResultStep'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const STEP_LABEL = {
   welcome: '시작',
@@ -25,6 +26,7 @@ export default function Booth() {
   const [editDraft, setEditDraft] = useState(null)
   const [editResult, setEditResult] = useState(null)
   const [colorChips, setColorChips] = useState([])
+  useDocumentTitle('포토부스')
 
   useEffect(() => {
     let cancelled = false

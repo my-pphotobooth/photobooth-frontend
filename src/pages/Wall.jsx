@@ -4,8 +4,10 @@ import { fetchPhotos } from '../api/photos'
 import WallPhoto from '../components/wall/WallPhoto'
 import PhotoModal from '../components/wall/PhotoModal'
 import { LeftArrow, RightArrow } from '../components/icons/Arrows'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function Wall() {
+  useDocumentTitle('벽')
   const [photos, setPhotos] = useState([])
   const [status, setStatus] = useState('loading')
   const [cursor, setCursor] = useState(null)
