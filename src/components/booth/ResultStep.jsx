@@ -5,7 +5,7 @@ import { getFrameLayout } from '../../data/frames'
 import { withChip } from '../../data/basicFrame'
 import { composeFrame } from '../../utils/compose'
 import { uploadPhoto } from '../../api/photos'
-import { fetchTapes } from '../../api/tapes'
+import { fetchTapes, fetchTapeCategories } from '../../api/tapes'
 
 export default function ResultStep({
   frame,
@@ -21,6 +21,7 @@ export default function ResultStep({
   const [errorMessage, setErrorMessage] = useState(null)
   const [errorDetail, setErrorDetail] = useState(null)
   const [tapes, setTapes] = useState([])
+  const [tapeCategories, setTapeCategories] = useState([])
   const [pickerOpen, setPickerOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -78,9 +79,11 @@ export default function ResultStep({
 
   useEffect(() => {
     let cancelled = false
-    fetchTapes()
-      .then((items) => {
-        if (!cancelled) setTapes(items)
+    Promise.all([fetchTapes(), fetchTapeCategories()])
+      .then(([items, cats]) => {
+        if (cancelled) return
+        setTapes(items)
+        setTapeCategories(cats)
       })
       .catch((err) => {
         // 테이프 로드 실패는 치명적 X — 빈 목록으로 진행
@@ -185,6 +188,7 @@ export default function ResultStep({
       {pickerOpen && (
         <TapePickerModal
           tapes={tapes}
+          categories={tapeCategories}
           onCancel={() => setPickerOpen(false)}
           onConfirm={handleConfirm}
         />
@@ -237,9 +241,20 @@ function formatErrorDetail(err) {
   return lines.join('\n')
 }
 
-function TapePickerModal({ tapes, onCancel, onConfirm }) {
+function TapePickerModal({ tapes, categories = [], onCancel, onConfirm }) {
   const [selectedId, setSelectedId] = useState(null)
-  const isEmpty = tapes.length === 0
+  const showTabs = categories.length > 1
+  const [activeCat, setActiveCat] = useState(() =>
+    showTabs
+      ? (categories.find((c) => tapes.some((t) => t.categoryId === c.id))?.id ??
+        categories[0]?.id ??
+        null)
+      : null,
+  )
+  const shown = showTabs
+    ? tapes.filter((t) => t.categoryId === activeCat)
+    : tapes
+  const isEmpty = shown.length === 0
 
   return (
     <div
@@ -262,6 +277,28 @@ function TapePickerModal({ tapes, onCancel, onConfirm }) {
           </button>
         </div>
 
+        {showTabs && (
+          <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-neutral-100 px-5 py-2">
+            {categories.map((c) => {
+              const isActive = c.id === activeCat
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setActiveCat(c.id)}
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs transition ${
+                    isActive
+                      ? 'border-neutral-900 bg-neutral-900 text-white'
+                      : 'border-neutral-300 bg-white text-neutral-700'
+                  }`}
+                >
+                  {c.name}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {isEmpty ? (
             <p className="py-8 text-center text-sm text-neutral-500">
@@ -269,7 +306,7 @@ function TapePickerModal({ tapes, onCancel, onConfirm }) {
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {tapes.map((tape) => {
+              {shown.map((tape) => {
                 const isSelected = tape.id === selectedId
                 return (
                   <button

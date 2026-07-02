@@ -6,3 +6,10 @@ export async function fetchTapes() {
   const data = await res.json()
   return data.items
 }
+
+export async function fetchTapeCategories() {
+  const res = await fetch(`${API}/api/tape-categories`)
+  if (!res.ok) throw new Error(`fetch tape categories failed: ${res.status}`)
+  const data = await res.json()
+  return data.items
+}

@@ -4,13 +4,14 @@ import {
   fetchAdminPhotos,
   updateAdminPhoto,
 } from '../../api/gangmin'
-import { fetchTapes } from '../../api/tapes'
+import { fetchTapes, fetchTapeCategories } from '../../api/tapes'
 import { EmptyState, ErrorBanner, Spinner } from './ui'
 import { useConfirm, useToast } from './uiHooks'
 
 export default function Photos() {
   const [items, setItems] = useState([])
   const [tapes, setTapes] = useState([])
+  const [tapeCategories, setTapeCategories] = useState([])
   const [cursor, setCursor] = useState(null)
   const [hasMore, setHasMore] = useState(false)
   const [status, setStatus] = useState('loading')
@@ -50,9 +51,11 @@ export default function Photos() {
         setError(err.message)
         setStatus('error')
       })
-    fetchTapes()
-      .then((items) => {
-        if (!cancelled) setTapes(items)
+    Promise.all([fetchTapes(), fetchTapeCategories()])
+      .then(([items, cats]) => {
+        if (cancelled) return
+        setTapes(items)
+        setTapeCategories(cats)
       })
       .catch((err) => {
         if (!cancelled) console.warn('failed to load tapes:', err)
@@ -143,6 +146,7 @@ export default function Photos() {
         <TapeEditModal
           photo={items.find((p) => p.id === editingId)}
           tapes={tapes}
+          categories={tapeCategories}
           onCancel={() => setEditingId(null)}
           onConfirm={(tapeId) =>
             handleSaveTape(items.find((p) => p.id === editingId), tapeId)
@@ -189,8 +193,17 @@ function PhotoCard({ photo, onDelete, onChangeTape }) {
   )
 }
 
-function TapeEditModal({ photo, tapes, onCancel, onConfirm }) {
+function TapeEditModal({ photo, tapes, categories = [], onCancel, onConfirm }) {
   const [selectedId, setSelectedId] = useState(photo?.tape?.id ?? null)
+  const showTabs = categories.length > 1
+  const [activeCat, setActiveCat] = useState(() => {
+    if (!showTabs) return null
+    const cur = tapes.find((t) => t.id === photo?.tape?.id)
+    return cur?.categoryId ?? categories[0]?.id ?? null
+  })
+  const shown = showTabs
+    ? tapes.filter((t) => t.categoryId === activeCat)
+    : tapes
 
   return (
     <div
@@ -212,6 +225,28 @@ function TapeEditModal({ photo, tapes, onCancel, onConfirm }) {
           </button>
         </div>
 
+        {showTabs && (
+          <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-neutral-100 px-5 py-2">
+            {categories.map((c) => {
+              const isActive = c.id === activeCat
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setActiveCat(c.id)}
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs transition ${
+                    isActive
+                      ? 'border-neutral-900 bg-neutral-900 text-white'
+                      : 'border-neutral-300 bg-white text-neutral-700'
+                  }`}
+                >
+                  {c.name}
+                </button>
+              )
+            })}
+          </div>
+        )}
+
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <button
@@ -227,7 +262,7 @@ function TapeEditModal({ photo, tapes, onCancel, onConfirm }) {
               </div>
               <span className="text-xs text-neutral-700">없음</span>
             </button>
-            {tapes.map((tape) => {
+            {shown.map((tape) => {
               const isSelected = tape.id === selectedId
               return (
                 <button

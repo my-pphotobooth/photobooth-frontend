@@ -147,10 +147,17 @@ export async function fetchAdminTapes() {
   return data.items
 }
 
-export async function createTape({ name, file, sortOrder = 0, active = true }) {
+export async function createTape({
+  name,
+  file,
+  categoryId,
+  sortOrder = 0,
+  active = true,
+}) {
   const fd = new FormData()
   fd.append('name', name)
   fd.append('file', file)
+  if (categoryId) fd.append('categoryId', categoryId)
   fd.append('sortOrder', String(sortOrder))
   fd.append('active', String(active))
   const res = await fetch(`${API}/api/gangmin/tapes`, {
@@ -175,9 +182,13 @@ export async function createTape({ name, file, sortOrder = 0, active = true }) {
   return res.json()
 }
 
-export async function updateTape(id, { name, sortOrder, active, file } = {}) {
+export async function updateTape(
+  id,
+  { name, categoryId, sortOrder, active, file } = {},
+) {
   const fd = new FormData()
   if (name !== undefined) fd.append('name', name)
+  if (categoryId !== undefined) fd.append('categoryId', categoryId)
   if (sortOrder !== undefined) fd.append('sortOrder', String(sortOrder))
   if (active !== undefined) fd.append('active', String(active))
   if (file) fd.append('file', file)
@@ -204,6 +215,18 @@ export async function updateTape(id, { name, sortOrder, active, file } = {}) {
 }
 
 export const deleteTape = (id) => jreq('DELETE', `/api/gangmin/tapes/${id}`)
+
+// ----- Tape categories -----
+export async function fetchAdminTapeCategories() {
+  const data = await jreq('GET', '/api/gangmin/tape-categories')
+  return data.items
+}
+export const createTapeCategory = (data) =>
+  jreq('POST', '/api/gangmin/tape-categories', data)
+export const updateTapeCategory = (id, data) =>
+  jreq('PATCH', `/api/gangmin/tape-categories/${id}`, data)
+export const deleteTapeCategory = (id) =>
+  jreq('DELETE', `/api/gangmin/tape-categories/${id}`)
 
 export async function uploadAdminFile(file) {
   const fd = new FormData()
