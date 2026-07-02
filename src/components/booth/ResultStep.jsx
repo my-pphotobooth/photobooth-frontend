@@ -2,11 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getFilterById } from '../../data/filters'
 import { getFrameLayout } from '../../data/frames'
+import { withChip } from '../../data/basicFrame'
 import { composeFrame } from '../../utils/compose'
 import { uploadPhoto } from '../../api/photos'
 import { fetchTapes } from '../../api/tapes'
 
-export default function ResultStep({ frame, photos, editResult, onReset }) {
+export default function ResultStep({
+  frame,
+  photos,
+  editResult,
+  onReset,
+  colorChips = [],
+}) {
   const canvas = getFrameLayout(frame).canvas
   const aspectRatio = `${canvas.width} / ${canvas.height}`
   const [composedBlob, setComposedBlob] = useState(null)
@@ -26,9 +33,15 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
         const selectedOverlays = editResult.selectedIndices.map(
           (i) => frame.overlays?.[i] ?? null,
         )
+        // 기본 프레임이면 선택한 컬러칩 색을 입혀서 합성
+        const chip = frame.isBasic
+          ? (colorChips.find((c) => c.id === editResult.colorChipId) ??
+            colorChips[0] ??
+            null)
+          : null
         const filter = getFilterById(editResult.filterId)
         const blob = await composeFrame({
-          frame,
+          frame: chip ? withChip(frame, chip) : frame,
           photoBlobs: selectedBlobs,
           overlays: selectedOverlays,
           filterCss: filter.css,
@@ -49,7 +62,7 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
     return () => {
       cancelled = true
     }
-  }, [frame, photos, editResult])
+  }, [frame, photos, editResult, colorChips])
 
   const composedUrl = useMemo(
     () => (composedBlob ? URL.createObjectURL(composedBlob) : null),
@@ -95,7 +108,10 @@ export default function ResultStep({ frame, photos, editResult, onReset }) {
     setErrorMessage(null)
     setErrorDetail(null)
     try {
-      await uploadPhoto(composedBlob, { frameId: frame.id, tapeId })
+      await uploadPhoto(composedBlob, {
+        frameId: frame.isBasic ? null : frame.id,
+        tapeId,
+      })
       setStatus('uploaded')
       setTimeout(() => navigate('/wall'), 700)
     } catch (err) {

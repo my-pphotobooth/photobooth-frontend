@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchFrames, fetchFrameCategories } from '../../api/frames'
+import { fetchBasicLayouts } from '../../api/basicFrames'
+import { basicFrameBase, withChip } from '../../data/basicFrame'
 import FrameThumbnail from './FrameThumbnail'
 
-export default function FrameSelectStep({ onSelectedChange }) {
+export default function FrameSelectStep({ onSelectedChange, colorChips = [] }) {
   const [categories, setCategories] = useState([])
   const [frames, setFrames] = useState([])
+  const [basicLayouts, setBasicLayouts] = useState([])
   const [status, setStatus] = useState('loading')
   const [categoryId, setCategoryId] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
@@ -13,13 +16,15 @@ export default function FrameSelectStep({ onSelectedChange }) {
     let cancelled = false
     ;(async () => {
       try {
-        const [cats, frs] = await Promise.all([
+        const [cats, frs, layouts] = await Promise.all([
           fetchFrameCategories(),
           fetchFrames(),
+          fetchBasicLayouts(),
         ])
         if (cancelled) return
         setCategories(cats)
         setFrames(frs)
+        setBasicLayouts(layouts)
         setCategoryId(cats[0]?.id ?? null)
         setStatus('ready')
       } catch (err) {
@@ -33,11 +38,16 @@ export default function FrameSelectStep({ onSelectedChange }) {
     }
   }, [])
 
-  const framesInCategory = useMemo(
-    () => frames.filter((f) => f.categoryId === categoryId),
-    [frames, categoryId],
-  )
   const category = categories.find((c) => c.id === categoryId)
+  const defaultChip = colorChips[0] ?? null
+
+  // 기본 카테고리는 규격(레이아웃)을 대표 칩색으로 그린 frame으로, 나머지는 DB 프레임.
+  const items = useMemo(() => {
+    if (category?.isBasic) {
+      return basicLayouts.map((l) => withChip(basicFrameBase(l), defaultChip))
+    }
+    return frames.filter((f) => f.categoryId === categoryId)
+  }, [category, basicLayouts, frames, categoryId, defaultChip])
 
   function handleCategoryChange(id) {
     setCategoryId(id)
@@ -97,13 +107,13 @@ export default function FrameSelectStep({ onSelectedChange }) {
         })}
       </div>
 
-      {framesInCategory.length === 0 ? (
+      {items.length === 0 ? (
         <div className="flex flex-1 items-center justify-center text-sm text-neutral-500">
           지금은 준비된 {category?.name ?? ''} 프레임이 없어요
         </div>
       ) : (
         <div className="-mx-4 flex snap-x snap-mandatory justify-center-safe gap-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6">
-          {framesInCategory.map((frame) => {
+          {items.map((frame) => {
             const isSelected = frame.id === selectedId
             return (
               <button

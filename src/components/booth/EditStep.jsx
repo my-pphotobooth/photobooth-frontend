@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_FILTER_ID, filters, getFilterById } from '../../data/filters'
 import { getSlotCount } from '../../data/frames'
+import { withChip } from '../../data/basicFrame'
 import PreviewStrip from './PreviewStrip'
 
-export default function EditStep({ frame, photos, onDraftChange }) {
+export default function EditStep({ frame, photos, onDraftChange, colorChips = [] }) {
   const slotCount = getSlotCount(frame)
   const [selectedIndices, setSelectedIndices] = useState([])
   const [filterId, setFilterId] = useState(DEFAULT_FILTER_ID)
+  const [colorChipId, setColorChipId] = useState(null)
   const [photoUrls, setPhotoUrls] = useState([])
+
+  // 기본 프레임일 때만 컬러칩 사용. 미선택이면 첫 칩을 기본값으로.
+  const showChips = frame.isBasic && colorChips.length > 0
+  const selectedChip = showChips
+    ? (colorChips.find((c) => c.id === colorChipId) ?? colorChips[0])
+    : null
+  const effectiveFrame = selectedChip ? withChip(frame, selectedChip) : frame
 
   useEffect(() => {
     const urls = photos.map((blob) => URL.createObjectURL(blob))
@@ -28,9 +37,10 @@ export default function EditStep({ frame, photos, onDraftChange }) {
     onDraftChange?.({
       selectedIndices,
       filterId,
+      colorChipId: selectedChip?.id ?? null,
       canProceed,
     })
-  }, [selectedIndices, filterId, canProceed, onDraftChange])
+  }, [selectedIndices, filterId, selectedChip?.id, canProceed, onDraftChange])
 
   function toggle(index) {
     setSelectedIndices((prev) => {
@@ -58,7 +68,7 @@ export default function EditStep({ frame, photos, onDraftChange }) {
       <div className="flex items-stretch gap-4 lg:min-h-0 lg:flex-1">
         <div className="w-28 shrink-0 sm:w-40 lg:h-full lg:w-auto">
           <PreviewStrip
-            frame={frame}
+            frame={effectiveFrame}
             photoUrls={previewUrls}
             overlays={previewOverlays}
             filterCss={filter.css}
@@ -76,7 +86,44 @@ export default function EditStep({ frame, photos, onDraftChange }) {
         </div>
       </div>
 
+      {showChips && (
+        <ColorChipTabs
+          chips={colorChips}
+          selectedId={selectedChip?.id}
+          onSelect={setColorChipId}
+        />
+      )}
+
       <FilterTabs selectedId={filterId} onSelect={setFilterId} />
+    </div>
+  )
+}
+
+function ColorChipTabs({ chips, selectedId, onSelect }) {
+  return (
+    <div className="-mx-2 flex shrink-0 items-center gap-2 overflow-x-auto px-2 py-1">
+      {chips.map((chip) => {
+        const isSelected = chip.id === selectedId
+        return (
+          <button
+            key={chip.id}
+            type="button"
+            onClick={() => onSelect(chip.id)}
+            title={chip.name}
+            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-1 text-xs transition ${
+              isSelected
+                ? 'border-neutral-900 bg-neutral-100'
+                : 'border-neutral-300 bg-white hover:border-neutral-500'
+            }`}
+          >
+            <span
+              className="h-5 w-5 rounded-full border border-neutral-300"
+              style={{ backgroundColor: chip.backgroundColor }}
+            />
+            <span className="pr-1 text-neutral-700">{chip.name}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }

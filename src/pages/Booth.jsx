@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { fetchColorChips } from '../api/basicFrames'
 import { LeftArrow } from '../components/icons/Arrows'
 import WelcomeStep from '../components/booth/WelcomeStep'
 import FrameSelectStep from '../components/booth/FrameSelectStep'
@@ -23,6 +24,22 @@ export default function Booth() {
   const [photos, setPhotos] = useState([])
   const [editDraft, setEditDraft] = useState(null)
   const [editResult, setEditResult] = useState(null)
+  const [colorChips, setColorChips] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchColorChips()
+      .then((items) => {
+        if (!cancelled) setColorChips(items)
+      })
+      .catch((err) => {
+        // 칩 로드 실패는 치명적 X — 기본 프레임은 프레임 자체 색으로 진행
+        console.warn('failed to load color chips:', err)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   function handleStart() {
     setStep('frame')
@@ -77,6 +94,7 @@ export default function Booth() {
       handleEditDone({
         selectedIndices: editDraft.selectedIndices,
         filterId: editDraft.filterId,
+        colorChipId: editDraft.colorChipId,
       })
     }
   }
@@ -115,7 +133,10 @@ export default function Booth() {
         <div className="relative flex min-h-0 flex-1 flex-col rounded-xl bg-white p-4 pb-20 sm:rounded-2xl sm:p-8 sm:pb-24">
           {step === 'welcome' && <WelcomeStep onStart={handleStart} />}
           {step === 'frame' && (
-            <FrameSelectStep onSelectedChange={setSelectedFrame} />
+            <FrameSelectStep
+              onSelectedChange={setSelectedFrame}
+              colorChips={colorChips}
+            />
           )}
           {step === 'capture' && (
             <CaptureStep frame={selectedFrame} onDone={handleCaptureDone} />
@@ -125,6 +146,7 @@ export default function Booth() {
               frame={selectedFrame}
               photos={photos}
               onDraftChange={setEditDraft}
+              colorChips={colorChips}
             />
           )}
           {step === 'result' && (
@@ -133,6 +155,7 @@ export default function Booth() {
               photos={photos}
               editResult={editResult}
               onReset={handleReset}
+              colorChips={colorChips}
             />
           )}
 
