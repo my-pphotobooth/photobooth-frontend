@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   createFrame,
+  fetchAdminBasicLayouts,
   fetchAdminCategories,
   fetchAdminFrame,
   updateFrame,
@@ -39,6 +40,7 @@ export default function FrameForm({ mode }) {
   const [layout, setLayout] = useState(freshLayout)
   const [frameImageUrl, setFrameImageUrl] = useState(null)
   const [categories, setCategories] = useState([])
+  const [basicLayouts, setBasicLayouts] = useState([])
   const [status, setStatus] = useState(mode === 'edit' ? 'loading' : 'ready')
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -48,9 +50,13 @@ export default function FrameForm({ mode }) {
     let cancelled = false
     ;(async () => {
       try {
-        const cats = await fetchAdminCategories()
+        const [cats, bls] = await Promise.all([
+          fetchAdminCategories(),
+          fetchAdminBasicLayouts(),
+        ])
         if (cancelled) return
         setCategories(cats)
+        setBasicLayouts(bls)
         if (mode === 'edit') {
           const frame = await fetchAdminFrame(id)
           if (cancelled) return
@@ -250,6 +256,37 @@ export default function FrameForm({ mode }) {
             setLayout((l) => ({ ...l, canvas: { width: w, height: h } }))
           }
         />
+
+        {basicLayouts.length > 0 && (
+          <div className="rounded-xl border border-neutral-200 bg-white p-4">
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-neutral-700">
+                기본 규격에서 불러오기
+              </span>
+              <select
+                defaultValue=""
+                onChange={(e) => {
+                  const bl = basicLayouts.find((b) => b.id === e.target.value)
+                  if (bl) setLayout(structuredClone(bl.layout))
+                  e.target.value = ''
+                }}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              >
+                <option value="">규격 선택…</option>
+                {basicLayouts.map((bl) => (
+                  <option key={bl.id} value={bl.id}>
+                    {bl.name} ({bl.layout.canvas.width}×{bl.layout.canvas.height},{' '}
+                    {bl.layout.slots.length}칸)
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="mt-1 text-xs text-neutral-500">
+              선택하면 아래 캔버스 크기·슬롯 배치·촬영 횟수가 그 규격으로
+              채워져요. (색·이미지·오버레이는 유지)
+            </p>
+          </div>
+        )}
 
         <SlotEditor
           layout={layout}
