@@ -9,7 +9,7 @@ export default function FrameThumbnail({ frame, heightClass = 'h-44 sm:h-64' }) 
 
   return (
     <div
-      className={`@container relative w-auto shrink-0 overflow-hidden rounded-md shadow-md ${heightClass}`}
+      className={`@container relative w-auto shrink-0 overflow-hidden rounded-md shadow-lg ring-1 ring-neutral-200 ${heightClass}`}
       style={{ aspectRatio: `${cw} / ${ch}`, backgroundColor: frame.backgroundColor }}
     >
       {frame.frameImageUrl && (

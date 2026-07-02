@@ -120,13 +120,16 @@ export default function FrameSelectStep({ onSelectedChange, colorChips = [] }) {
                 key={frame.id}
                 type="button"
                 onClick={() => handleFrameClick(frame)}
-                className={`group flex flex-none snap-center flex-col items-center gap-2 rounded-xl border-2 p-2 transition sm:p-3 ${
+                className={`group flex flex-none snap-center flex-col items-center gap-4 rounded-xl border-2 p-2 transition sm:gap-5 sm:p-3 ${
                   isSelected
                     ? 'border-neutral-300 bg-neutral-50'
                     : 'border-transparent hover:border-neutral-200'
                 }`}
               >
-                <FrameThumbnail frame={frame} />
+                <FrameThumbnail
+                  frame={frame}
+                  heightClass="h-44 sm:h-64 lg:h-96"
+                />
                 <span className="text-xs font-medium text-neutral-800 sm:text-sm">
                   {frame.name}
                 </span>
