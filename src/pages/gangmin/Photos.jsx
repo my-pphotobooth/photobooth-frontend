@@ -114,7 +114,7 @@ export default function Photos() {
 
       {status === 'ready' && items.length > 0 && (
         <>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="flex flex-wrap items-start gap-3">
             {items.map((photo) => (
               <PhotoCard
                 key={photo.id}
@@ -155,13 +155,13 @@ export default function Photos() {
 
 function PhotoCard({ photo, onDelete, onChangeTape }) {
   return (
-    <li className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-2">
-      <div className="overflow-hidden rounded-md bg-neutral-50">
+    <li className="flex w-auto min-w-44 flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-2">
+      <div className="flex justify-center overflow-hidden rounded-md bg-neutral-50">
         <img
           src={photo.url}
           alt=""
           loading="lazy"
-          className="block w-full"
+          className="block h-56 w-auto sm:h-64"
         />
       </div>
       <div className="flex flex-col gap-0.5 px-1 text-xs text-neutral-500">
@@ -171,16 +171,16 @@ function PhotoCard({ photo, onDelete, onChangeTape }) {
           <span>테이프: {photo.tape ? photo.tape.name : '없음'}</span>
         </span>
       </div>
-      <div className="flex gap-2">
+      <div className="mt-auto flex gap-2">
         <button
           onClick={onChangeTape}
-          className="flex-1 rounded-md border border-neutral-300 px-3 py-1.5 text-xs hover:bg-neutral-50"
+          className="flex-1 whitespace-nowrap rounded-md border border-neutral-300 px-2 py-1.5 text-xs hover:bg-neutral-50"
         >
           테이프 변경
         </button>
         <button
           onClick={onDelete}
-          className="flex-1 rounded-md border border-red-300 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50"
+          className="shrink-0 whitespace-nowrap rounded-md border border-red-300 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50"
         >
           삭제
         </button>
