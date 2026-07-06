@@ -49,7 +49,7 @@ export default function PhotoModal({ photo, onClose }) {
         </div>
         <button
           onClick={onClose}
-          className="rounded-lg bg-neutral-800 px-4 py-2 text-sm font-medium text-white shadow hover:bg-neutral-700"
+          className="w-40 rounded-lg bg-neutral-300 px-6 py-2.5 text-sm font-semibold text-neutral-800 shadow-lg transition hover:bg-neutral-400"
         >
           닫기
         </button>
