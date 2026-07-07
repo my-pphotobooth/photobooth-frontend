@@ -20,7 +20,7 @@ export default function BasicLayoutForm({ mode }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const [name, setName] = useState('')
-  const [footerText, setFooterText] = useState('my-photobooth')
+  const [footerText, setFooterText] = useState("gang's-photo")
   const [sortOrder, setSortOrder] = useState(0)
   const [layout, setLayout] = useState(freshLayout)
   const [status, setStatus] = useState(mode === 'edit' ? 'loading' : 'ready')

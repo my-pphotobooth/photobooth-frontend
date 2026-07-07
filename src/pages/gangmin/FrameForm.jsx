@@ -26,7 +26,7 @@ const EMPTY_FORM = {
   backgroundColor: '#ffffff',
   textColor: '#1f2937',
   slotColor: '#e5e7eb',
-  footerText: 'my-photobooth',
+  footerText: "gang's-photo",
   availableFrom: '',
   availableUntil: '',
   sortOrder: 0,
