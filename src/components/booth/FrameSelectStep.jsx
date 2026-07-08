@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchFrames, fetchFrameCategories } from '../../api/frames'
 import { fetchBasicLayouts } from '../../api/basicFrames'
 import { basicFrameBase, withChip } from '../../data/basicFrame'
+import { getFrameLayout } from '../../data/frames'
 import FrameThumbnail from './FrameThumbnail'
 
 export default function FrameSelectStep({ onSelectedChange, colorChips = [] }) {
@@ -112,25 +113,29 @@ export default function FrameSelectStep({ onSelectedChange, colorChips = [] }) {
           지금은 준비된 {category?.name ?? ''} 프레임이 없어요
         </div>
       ) : (
-        <div className="-mx-4 flex snap-x snap-mandatory justify-center-safe gap-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6">
+        <div className="-mx-4 grid auto-cols-max grid-flow-col justify-center-safe gap-4 overflow-x-auto px-4 py-4 snap-x snap-mandatory sm:-mx-6 sm:min-h-0 sm:flex-1 sm:grid-rows-1 sm:gap-6 sm:px-6">
           {items.map((frame) => {
             const isSelected = frame.id === selectedId
+            const layout = getFrameLayout(frame)
+            const aspect = layout.canvas.width / layout.canvas.height
             return (
+              // 버튼(그리드 아이템)에 직접 aspect-ratio → 폭이 안 무너짐.
+              // 라벨도 버튼 안에 두어 선택 박스가 라벨까지 감싸도록.
               <button
                 key={frame.id}
                 type="button"
                 onClick={() => handleFrameClick(frame)}
-                className={`group flex flex-none snap-center flex-col items-center gap-4 rounded-xl border-2 p-2 transition sm:gap-5 sm:p-3 ${
+                style={{ aspectRatio: aspect }}
+                className={`group flex h-44 w-auto snap-center flex-col items-center justify-center gap-2 rounded-xl p-2 transition sm:h-full sm:gap-3 sm:p-3 ${
                   isSelected
-                    ? 'border-neutral-300 bg-neutral-50'
-                    : 'border-transparent hover:border-neutral-200'
+                    ? 'bg-neutral-50 ring-2 ring-neutral-300'
+                    : 'hover:bg-neutral-50'
                 }`}
               >
-                <FrameThumbnail
-                  frame={frame}
-                  heightClass="h-44 sm:h-64 lg:h-96"
-                />
-                <span className="text-xs font-medium text-neutral-800 sm:text-sm">
+                <div className="flex min-h-0 flex-1 items-center justify-center">
+                  <FrameThumbnail frame={frame} heightClass="h-full" />
+                </div>
+                <span className="shrink-0 text-xs font-medium text-neutral-800 sm:text-sm">
                   {frame.name}
                 </span>
               </button>
