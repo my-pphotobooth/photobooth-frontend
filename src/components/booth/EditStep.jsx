@@ -102,7 +102,7 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
 
 function ColorChipTabs({ chips, selectedId, onSelect }) {
   return (
-    <div className="-mx-2 flex shrink-0 items-center gap-2 overflow-x-auto px-2 py-1">
+    <div className="-mx-2 flex shrink-0 items-center gap-2 overflow-x-auto px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {chips.map((chip) => {
         const isSelected = chip.id === selectedId
         return (
@@ -183,7 +183,7 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss, aspect =
 
 function FilterTabs({ selectedId, onSelect }) {
   return (
-    <div className="-mx-2 flex shrink-0 gap-2 overflow-x-auto px-2 py-1">
+    <div className="-mx-2 flex shrink-0 gap-2 overflow-x-auto px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {filters.map((f) => {
         const isSelected = f.id === selectedId
         return (
