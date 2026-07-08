@@ -13,7 +13,7 @@ export default function PreviewStrip({
 
   return (
     <div
-      className="@container relative w-full overflow-hidden rounded-md shadow-md lg:h-full lg:w-auto"
+      className="@container relative h-full max-h-full w-auto max-w-full overflow-hidden rounded-md shadow-md"
       style={{ aspectRatio: `${cw} / ${ch}`, backgroundColor: frame.backgroundColor }}
     >
       {frame.frameImageUrl && (

@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_FILTER_ID, filters, getFilterById } from '../../data/filters'
-import { getSlotAspect, getSlotCount } from '../../data/frames'
+import { getSlotAspect, getSlotCount, getFrameLayout } from '../../data/frames'
 import { withChip } from '../../data/basicFrame'
 import PreviewStrip from './PreviewStrip'
 
 export default function EditStep({ frame, photos, onDraftChange, colorChips = [] }) {
   const slotCount = getSlotCount(frame)
+  // 프레임 캔버스 비율로 편집 레이아웃 결정:
+  // 슬림(길쭉)하면 프레임을 왼쪽에 세워 놓고, 뚱뚱하면 위에 눕혀 놓는다.
+  const canvas = getFrameLayout(frame).canvas
+  const stacked = canvas.width / canvas.height >= 0.5
   const [selectedIndices, setSelectedIndices] = useState([])
   const [filterId, setFilterId] = useState(DEFAULT_FILTER_ID)
   const [colorChipId, setColorChipId] = useState(null)
@@ -65,8 +69,17 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
         </span>
       </div>
 
-      <div className="flex items-stretch gap-4 lg:min-h-0 lg:flex-1">
-        <div className="w-28 shrink-0 sm:w-40 lg:h-full lg:w-auto">
+      <div
+        className={`flex h-[58dvh] min-h-0 gap-4 md:h-auto md:flex-1 md:flex-row ${
+          stacked ? 'flex-col' : 'flex-row'
+        }`}
+      >
+        {/* 프레임 미리보기: 자기 셀의 높이를 꽉 채움 (태블릿+는 항상 왼쪽) */}
+        <div
+          className={`flex min-h-0 items-center justify-center md:h-full md:w-auto md:flex-none ${
+            stacked ? 'w-full flex-1' : 'h-full shrink-0'
+          }`}
+        >
           <PreviewStrip
             frame={effectiveFrame}
             photoUrls={previewUrls}
@@ -75,7 +88,12 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
           />
         </div>
 
-        <div className="min-w-0 flex-1">
+        {/* 찍은 사진들: 모바일은 프레임 모양따라, 태블릿+는 항상 오른쪽 */}
+        <div
+          className={`min-h-0 md:h-full md:min-w-0 md:flex-1 ${
+            stacked ? 'h-24 shrink-0 sm:h-28' : 'h-full min-w-0 flex-1'
+          }`}
+        >
           <PhotoGrid
             urls={photoUrls}
             frame={frame}
@@ -83,6 +101,7 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
             onToggle={toggle}
             filterCss={filter.css}
             aspect={getSlotAspect(frame)}
+            stacked={stacked}
           />
         </div>
       </div>
@@ -129,9 +148,24 @@ function ColorChipTabs({ chips, selectedId, onSelect }) {
   )
 }
 
-function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss, aspect = 4 / 3 }) {
+function PhotoGrid({
+  urls,
+  frame,
+  selectedIndices,
+  onToggle,
+  filterCss,
+  aspect = 4 / 3,
+  stacked = false,
+}) {
+  // 항상 열로 흘러가며 가로 스크롤. 행 수만 상황에 따라 다름:
+  // - 모바일 뚱뚱(stacked): 1행 (하단 가로 스트립)
+  // - 모바일 슬림: 4행 (오른쪽에서 4×2)
+  // - 태블릿+(md): 2행 (프레임 왼쪽, 오른쪽에서 2×4)
+  const wrapClass = `grid h-full auto-cols-max grid-flow-col gap-2 overflow-x-auto md:grid-rows-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+    stacked ? 'grid-rows-1' : 'grid-rows-4'
+  }`
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:h-full lg:auto-cols-max lg:grid-cols-none lg:grid-flow-col lg:grid-rows-2 lg:gap-3 lg:overflow-x-auto lg:pb-1">
+    <div className={wrapClass}>
       {urls.map((url, i) => {
         const order = selectedIndices.indexOf(i)
         const isSelected = order !== -1
@@ -142,7 +176,7 @@ function PhotoGrid({ urls, frame, selectedIndices, onToggle, filterCss, aspect =
             type="button"
             onClick={() => onToggle(i)}
             style={{ aspectRatio: aspect }}
-            className={`relative overflow-hidden rounded-md border-2 transition lg:h-full lg:w-auto ${
+            className={`relative h-full w-auto shrink-0 overflow-hidden rounded-md border-2 transition ${
               isSelected
                 ? 'border-neutral-900'
                 : 'border-transparent hover:border-neutral-300'
