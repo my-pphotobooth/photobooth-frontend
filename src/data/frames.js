@@ -58,6 +58,17 @@ export function getSlotAspect(frame) {
   return s.width / s.height
 }
 
+// 촬영 인덱스에 대응하는 슬롯의 가로/세로 비율.
+// 슬롯마다 크기가 다른 프레임에서 각 컷을 해당 슬롯 비율로 촬영·미리보기하기 위함.
+// 슬롯 수보다 많은 촬영(풀)은 순환. 슬롯 없으면 4:3.
+export function getSlotAspectAt(frame, index) {
+  const slots = getFrameLayout(frame).slots
+  if (!slots.length) return 4 / 3
+  const s = slots[index % slots.length]
+  if (!s || !s.width || !s.height) return 4 / 3
+  return s.width / s.height
+}
+
 // 촬영 횟수(촬영 풀 크기). 프레임이 지정한 shotCount를 쓰되,
 // 없거나 슬롯 수보다 작으면 max(8, 슬롯수)로 폴백.
 export function getShotCount(frame) {

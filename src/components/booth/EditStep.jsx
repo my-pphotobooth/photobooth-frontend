@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_FILTER_ID, filters, getFilterById } from '../../data/filters'
-import { getSlotAspect, getSlotCount, getFrameLayout } from '../../data/frames'
+import { getSlotAspectAt, getSlotCount, getFrameLayout } from '../../data/frames'
 import { withChip } from '../../data/basicFrame'
 import PreviewStrip from './PreviewStrip'
 
@@ -100,7 +100,6 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
             selectedIndices={selectedIndices}
             onToggle={toggle}
             filterCss={filter.css}
-            aspect={getSlotAspect(frame)}
             stacked={stacked}
           />
         </div>
@@ -154,7 +153,6 @@ function PhotoGrid({
   selectedIndices,
   onToggle,
   filterCss,
-  aspect = 4 / 3,
   stacked = false,
 }) {
   // 항상 열로 흘러가며 가로 스크롤. 행 수만 상황에 따라 다름:
@@ -175,7 +173,7 @@ function PhotoGrid({
             key={i}
             type="button"
             onClick={() => onToggle(i)}
-            style={{ aspectRatio: aspect }}
+            style={{ aspectRatio: getSlotAspectAt(frame, i) }}
             className={`relative h-full w-auto shrink-0 overflow-hidden rounded-md border-2 transition ${
               isSelected
                 ? 'border-neutral-900'

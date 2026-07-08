@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCamera } from '../../hooks/useCamera'
-import { getShotCount, getSlotAspect } from '../../data/frames'
+import { getShotCount, getSlotAspectAt } from '../../data/frames'
 
 const COUNTDOWN_START = 3
 
@@ -8,11 +8,11 @@ export default function CaptureStep({ frame, onDone }) {
   const { videoRef, status, error, capture } = useCamera()
   // 프레임이 지정한 촬영 횟수(풀). 이 중 슬롯 수만큼 편집 단계에서 고른다.
   const totalShots = getShotCount(frame)
-  // 촬영 미리보기·캡처 비율 = 슬롯 비율 (저장본과 일치, 크롭 방지)
-  const photoAspect = getSlotAspect(frame)
   const [phase, setPhase] = useState('idle')
   const [count, setCount] = useState(COUNTDOWN_START)
   const [shotIndex, setShotIndex] = useState(0)
+  // 촬영 미리보기·캡처 비율 = 현재 컷이 들어갈 슬롯 비율 (저장본과 일치, 크롭 방지)
+  const photoAspect = getSlotAspectAt(frame, shotIndex)
   const capturedRef = useRef([])
 
   useEffect(() => {
