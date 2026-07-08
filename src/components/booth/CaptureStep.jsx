@@ -99,7 +99,9 @@ export default function CaptureStep({ frame, onDone }) {
       <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 items-center justify-center">
         <div
           className={`relative overflow-hidden rounded-2xl bg-black ${
-            photoAspect < 1 ? 'h-full max-w-full' : 'w-full max-h-full'
+            photoAspect < 1
+              ? 'w-full max-h-full sm:h-full sm:w-auto sm:max-w-full'
+              : 'w-full max-h-full'
           }`}
           style={{ aspectRatio: photoAspect }}
         >
