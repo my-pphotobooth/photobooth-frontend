@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchPhotos } from '../api/photos'
 import WallPhoto from '../components/wall/WallPhoto'
+import WallSkeleton from '../components/wall/WallSkeleton'
 import PhotoModal from '../components/wall/PhotoModal'
 import { LeftArrow, RightArrow } from '../components/icons/Arrows'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -95,11 +96,7 @@ export default function Wall() {
           </Link>
         </header>
 
-        {status === 'loading' && (
-          <div className="py-20 text-center text-sm text-neutral-500">
-            불러오는 중…
-          </div>
-        )}
+        {status === 'loading' && <WallSkeleton />}
 
         {status === 'error' && (
           <div className="py-20 text-center text-sm text-red-600">

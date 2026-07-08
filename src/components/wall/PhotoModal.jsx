@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { idToAngle } from './WallPhoto'
+import { idToAngle } from '../../utils/idToAngle'
 
 export default function PhotoModal({ photo, onClose }) {
   const tapeAngle = idToAngle(photo.id + 'tape', 4)

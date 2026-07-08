@@ -1,6 +1,11 @@
+import { useState } from 'react'
+import { idToAngle } from '../../utils/idToAngle'
+
 export default function WallPhoto({ photo, onClick }) {
   const angle = idToAngle(photo.id, 1.5)
   const tapeAngle = idToAngle(photo.id + 'tape', 4)
+  // 실제 이미지 파일이 다 받아질 때까지 top-down(검은) 로딩을 감추고 pulse로 덮는다.
+  const [loaded, setLoaded] = useState(false)
 
   return (
     <button
@@ -21,23 +26,21 @@ export default function WallPhoto({ photo, onClick }) {
           />
         </div>
       )}
-      <img
-        src={photo.url}
-        alt=""
-        className="h-72 w-auto rounded-sm bg-white shadow-[0_6px_20px_rgba(0,0,0,0.15)] sm:h-96 lg:h-112"
-        draggable="false"
-      />
+      <span className="relative block">
+        <img
+          src={photo.url}
+          alt=""
+          onLoad={() => setLoaded(true)}
+          onError={() => setLoaded(true)}
+          className={`h-72 w-auto rounded-sm bg-white shadow-[0_6px_20px_rgba(0,0,0,0.15)] transition-opacity duration-300 sm:h-96 lg:h-112 ${
+            loaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          draggable="false"
+        />
+        {!loaded && (
+          <span className="absolute inset-0 animate-pulse rounded-sm bg-gray-200" />
+        )}
+      </span>
     </button>
   )
-}
-
-export function idToAngle(id, range) {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0
-  }
-  // JS의 %는 음수에서 음수를 반환해서 한쪽으로 편향됨 → unsigned로 변환
-  const unsigned = hash >>> 0
-  const normalized = ((unsigned % 1000) / 1000 - 0.5) * 2 // -1..+1
-  return normalized * range
 }
