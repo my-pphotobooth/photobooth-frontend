@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCamera } from '../../hooks/useCamera'
 import { getShotCount, getSlotAspect } from '../../data/frames'
 
@@ -14,8 +14,6 @@ export default function CaptureStep({ frame, onDone }) {
   const [count, setCount] = useState(COUNTDOWN_START)
   const [shotIndex, setShotIndex] = useState(0)
   const capturedRef = useRef([])
-  const [previewUrls, setPreviewUrls] = useState([])
-  const previewUrlsRef = useRef([])
 
   useEffect(() => {
     if (phase !== 'countdown') return
@@ -25,11 +23,6 @@ export default function CaptureStep({ frame, onDone }) {
         const blob = await capture({ aspectRatio: photoAspect })
         if (cancelled || !blob) return
         capturedRef.current = [...capturedRef.current, blob]
-        setPreviewUrls((prev) => {
-          const next = [...prev, URL.createObjectURL(blob)]
-          previewUrlsRef.current = next
-          return next
-        })
         setPhase('flash')
       })()
       return () => {
@@ -65,17 +58,8 @@ export default function CaptureStep({ frame, onDone }) {
     onDone(capturedRef.current)
   }, [phase, onDone])
 
-  useEffect(() => {
-    return () => {
-      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
-    }
-  }, [])
-
   function handleStart() {
-    previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
-    previewUrlsRef.current = []
     capturedRef.current = []
-    setPreviewUrls([])
     setShotIndex(0)
     setCount(COUNTDOWN_START)
     setPhase('countdown')
@@ -151,8 +135,6 @@ export default function CaptureStep({ frame, onDone }) {
         </div>
       </div>
 
-      <PhotoStrip count={totalShots} urls={previewUrls} aspect={photoAspect} />
-
       <div className="flex h-12 shrink-0 items-center justify-center sm:h-14">
         {!isRunning && phase !== 'done' && (
           <button
@@ -182,27 +164,6 @@ function Overlay({ children }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-white">
       {children}
-    </div>
-  )
-}
-
-function PhotoStrip({ count, urls, aspect = 4 / 3 }) {
-  const slots = useMemo(() => Array.from({ length: count }), [count])
-  // 촬영 컷 수와 무관하게 항상 한 줄(고정 높이) + 넘치면 가로 스크롤.
-  // 그래야 위쪽 카메라 영역(flex-1)이 찌부러지지 않는다.
-  return (
-    <div className="mx-auto flex w-full max-w-2xl shrink-0 justify-start gap-2 overflow-x-auto pb-1 sm:justify-center">
-      {slots.map((_, i) => (
-        <div
-          key={i}
-          style={{ aspectRatio: aspect }}
-          className="h-12 shrink-0 overflow-hidden rounded-md border border-neutral-200 bg-neutral-100 sm:h-14"
-        >
-          {urls[i] && (
-            <img src={urls[i]} alt="" className="h-full w-full object-cover" />
-          )}
-        </div>
-      ))}
     </div>
   )
 }
