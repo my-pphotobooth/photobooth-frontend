@@ -121,7 +121,7 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
 
 function ColorChipTabs({ chips, selectedId, onSelect }) {
   return (
-    <div className="-mx-2 flex shrink-0 items-center gap-2 overflow-x-auto px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-2 flex shrink-0 items-center gap-2 overflow-x-auto px-2 pt-1 pb-2.5">
       {chips.map((chip) => {
         const isSelected = chip.id === selectedId
         return (
@@ -161,7 +161,7 @@ function PhotoGrid({
   // - 모바일 뚱뚱(stacked): 1행 (하단 가로 스트립)
   // - 모바일 슬림: 4행 (오른쪽에서 4×2)
   // - 태블릿+(md): 2행 (프레임 왼쪽, 오른쪽에서 2×4)
-  const wrapClass = `grid h-full auto-cols-max grid-flow-col gap-2 overflow-x-auto md:grid-rows-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+  const wrapClass = `grid h-full auto-cols-max grid-flow-col gap-2 overflow-x-auto pb-2.5 md:grid-rows-2 ${
     stacked ? 'grid-rows-1' : 'grid-rows-4'
   }`
   return (
@@ -217,7 +217,7 @@ function PhotoGrid({
 
 function FilterTabs({ selectedId, onSelect }) {
   return (
-    <div className="-mx-2 flex shrink-0 gap-2 overflow-x-auto px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-2 flex shrink-0 gap-2 overflow-x-auto px-2 pt-1 pb-2.5">
       {filters.map((f) => {
         const isSelected = f.id === selectedId
         return (
