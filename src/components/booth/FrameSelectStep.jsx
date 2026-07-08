@@ -135,7 +135,7 @@ export default function FrameSelectStep({ onSelectedChange, colorChips = [] }) {
                 <div className="flex min-h-0 flex-1 items-center justify-center">
                   <FrameThumbnail frame={frame} heightClass="h-full" />
                 </div>
-                <span className="shrink-0 text-xs font-medium text-neutral-800 sm:text-sm">
+                <span className="shrink-0 whitespace-nowrap text-xs font-medium text-neutral-800 sm:text-sm">
                   {frame.name}
                 </span>
               </button>
