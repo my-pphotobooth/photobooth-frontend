@@ -192,7 +192,7 @@ function PhotoGrid({
                 src={overlay.src}
                 alt=""
                 draggable="false"
-                className="pointer-events-none absolute w-auto"
+                className="pointer-events-none absolute w-auto max-w-none"
                 style={{
                   right: `${overlay.right * 100}%`,
                   bottom: `${overlay.bottom * 100}%`,

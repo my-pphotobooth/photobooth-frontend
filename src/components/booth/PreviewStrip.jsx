@@ -56,7 +56,7 @@ export default function PreviewStrip({
               src={overlays[i].src}
               alt=""
               draggable="false"
-              className="pointer-events-none absolute w-auto"
+              className="pointer-events-none absolute w-auto max-w-none"
               style={{
                 right: `${overlays[i].right * 100}%`,
                 bottom: `${overlays[i].bottom * 100}%`,
