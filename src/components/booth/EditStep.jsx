@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_FILTER_ID, filters, getFilterById } from '../../data/filters'
-import { getSlotAspectAt, getSlotCount, getFrameLayout } from '../../data/frames'
+import {
+  getSlotAspectAt,
+  getSlotCount,
+  getFrameLayout,
+  getShotOverlays,
+  getCanvasOverlays,
+} from '../../data/frames'
+import { SlotOverlays } from './OverlayLayer'
 import { withChip } from '../../data/basicFrame'
 import PreviewStrip from './PreviewStrip'
 
@@ -34,7 +41,8 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
 
   const filter = getFilterById(filterId)
   const previewUrls = selectedIndices.map((i) => photoUrls[i])
-  const previewOverlays = selectedIndices.map((i) => frame.overlays?.[i])
+  const previewOverlays = selectedIndices.map((i) => getShotOverlays(frame, i))
+  const canvasOverlays = getCanvasOverlays(frame)
   const canProceed = selectedIndices.length === slotCount
 
   useEffect(() => {
@@ -84,6 +92,7 @@ export default function EditStep({ frame, photos, onDraftChange, colorChips = []
             frame={effectiveFrame}
             photoUrls={previewUrls}
             overlays={previewOverlays}
+            canvasOverlays={canvasOverlays}
             filterCss={filter.css}
           />
         </div>
@@ -167,7 +176,8 @@ function PhotoGrid({
       {urls.map((url, i) => {
         const order = selectedIndices.indexOf(i)
         const isSelected = order !== -1
-        const overlay = frame?.overlays?.[i]
+        // 사진 고르는 썸네일이라 슬롯 밖으로 나가는 것까지 셀 안에 가둬 보여준다.
+        const overlays = getShotOverlays(frame, i)
         return (
           <button
             key={i}
@@ -186,20 +196,21 @@ function PhotoGrid({
               className="absolute inset-0 h-full w-full object-cover"
               style={{ filter: filterCss }}
             />
-            {overlay && (
+            {overlays.map((o, oi) => (
               <img
+                key={`${o.src}-${oi}`}
                 crossOrigin="anonymous"
-                src={overlay.src}
+                src={o.src}
                 alt=""
                 draggable="false"
                 className="pointer-events-none absolute w-auto max-w-none"
                 style={{
-                  right: `${overlay.right * 100}%`,
-                  bottom: `${overlay.bottom * 100}%`,
-                  height: `${overlay.height * 100}%`,
+                  right: `${o.right * 100}%`,
+                  bottom: `${o.bottom * 100}%`,
+                  height: `${o.height * 100}%`,
                 }}
               />
-            )}
+            ))}
             {isSelected && <div className="absolute inset-0 bg-black/20" />}
             {isSelected && (
               <div className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">

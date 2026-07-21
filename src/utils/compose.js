@@ -1,10 +1,16 @@
-import { getFrameLayout, getFooterY } from '../data/frames'
+import {
+  getFrameLayout,
+  getFooterY,
+  normalizeOverlays,
+  overlayBox,
+} from '../data/frames'
 
 export async function composeFrame({
   frame,
   photoBlobs,
   filterCss,
   overlays = [],
+  canvasOverlays = [],
 }) {
   const layout = getFrameLayout(frame)
   const { width: canvasWidth, height: canvasHeight } = layout.canvas
@@ -21,20 +27,29 @@ export async function composeFrame({
   ctx.fillStyle = frame.backgroundColor
   ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 
-  const [images, overlayImages, frameImage] = await Promise.all([
-    Promise.all(photoBlobs.map(loadBlobAsImage)),
-    Promise.all(
-      overlays.map((o) => (o?.src ? loadImageFromSrc(o.src) : null)),
+  // overlays[i] = i번째 슬롯에 얹을 오버레이들. 구버전 호출(항목 하나짜리 객체)도 받는다.
+  const slotOverlays = slots.map((_, i) => toOverlayItems(overlays[i]))
+  const topOverlays = normalizeOverlays(canvasOverlays)
+
+  // 이미지를 src 단위로 한 번씩만 받아온다. (같은 스티커를 여러 슬롯에 재사용)
+  const srcs = [
+    ...new Set(
+      [...slotOverlays.flat(), ...topOverlays].map((o) => o.src),
     ),
+  ]
+  const [images, loadedOverlays, frameImage] = await Promise.all([
+    Promise.all(photoBlobs.map(loadBlobAsImage)),
+    Promise.all(srcs.map(loadImageFromSrc)),
     frame.frameImageUrl ? loadImageFromSrc(frame.frameImageUrl) : null,
   ])
+  const overlayImages = new Map(srcs.map((src, i) => [src, loadedOverlays[i]]))
 
   for (let i = 0; i < slots.length; i++) {
     const slot = slots[i]
     const img = images[i]
     if (!img) continue
 
-    // 사진과 오버레이 모두 자기 슬롯 모양에 클립 — 옆 컷/프레임 영역 침범 X
+    // 사진과 clip 오버레이는 자기 슬롯 모양에 클립 — 옆 컷/프레임 영역 침범 X
     ctx.save()
     slotPath(ctx, slot)
     ctx.clip()
@@ -48,14 +63,9 @@ export async function composeFrame({
       ctx.filter = 'none'
     }
 
-    const overlayImg = overlayImages[i]
-    const overlayData = overlays[i]
-    if (overlayImg && overlayData) {
-      const oh = overlayData.height * slot.height
-      const ow = oh * (overlayImg.width / overlayImg.height)
-      const ox = slot.x + slot.width - ow - overlayData.right * slot.width
-      const oy = slot.y + slot.height - oh - overlayData.bottom * slot.height
-      ctx.drawImage(overlayImg, ox, oy, ow, oh)
+    for (const o of slotOverlays[i]) {
+      if (!o.clip) continue
+      drawOverlay(ctx, overlayImages.get(o.src), o, slot, layout.canvas)
     }
 
     ctx.restore()
@@ -94,6 +104,18 @@ export async function composeFrame({
     }
   }
 
+  // 안 잘리는 오버레이는 맨 위에. 프레임 이미지·푸터까지 다 그린 뒤라야
+  // 슬롯 밖(프레임 여백)으로 삐져나온 부분이 덮이지 않는다.
+  for (let i = 0; i < slots.length; i++) {
+    for (const o of slotOverlays[i]) {
+      if (o.clip) continue
+      drawOverlay(ctx, overlayImages.get(o.src), o, slots[i], layout.canvas)
+    }
+  }
+  for (const o of topOverlays) {
+    drawOverlay(ctx, overlayImages.get(o.src), o, null, layout.canvas)
+  }
+
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {
@@ -103,6 +125,27 @@ export async function composeFrame({
       resolve(blob)
     }, 'image/png')
   })
+}
+
+// 슬롯 하나에 얹을 오버레이 목록으로 정규화.
+// 구버전 호출부는 오버레이 객체 하나(또는 null)를 넘긴다.
+function toOverlayItems(entry) {
+  if (!entry) return []
+  return normalizeOverlays(Array.isArray(entry) ? entry : [entry])
+}
+
+// overlayBox가 캔버스 우/하단 기준 거리를 주므로 슬롯·캔버스 앵커를 같은 식으로 그린다.
+function drawOverlay(ctx, img, overlay, slot, canvasSize) {
+  if (!img) return
+  const box = overlayBox(overlay, slot, canvasSize)
+  const ow = box.height * (img.width / img.height)
+  ctx.drawImage(
+    img,
+    canvasSize.width - box.right - ow,
+    canvasSize.height - box.bottom - box.height,
+    ow,
+    box.height,
+  )
 }
 
 // 슬롯 모양에 맞는 경로를 현재 path로 설정. (rect / 둥근 rect / ellipse)

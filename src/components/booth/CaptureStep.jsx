@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCamera } from '../../hooks/useCamera'
-import { getShotCount, getSlotAspectAt } from '../../data/frames'
+import {
+  getShotCount,
+  getSlotAspectAt,
+  getSlotAt,
+  getShotOverlays,
+  getCanvasOverlays,
+  getFrameLayout,
+} from '../../data/frames'
+import { OverlayLayer } from './OverlayLayer'
 
 const COUNTDOWN_START = 3
 
@@ -13,6 +21,10 @@ export default function CaptureStep({ frame, onDone }) {
   const [shotIndex, setShotIndex] = useState(0)
   // 촬영 미리보기·캡처 비율 = 현재 컷이 들어갈 슬롯 비율 (저장본과 일치, 크롭 방지)
   const photoAspect = getSlotAspectAt(frame, shotIndex)
+  // 프레임 전체 기준 오버레이는 지금 컷이 들어갈 슬롯만큼만 보인다.
+  const layout = getFrameLayout(frame)
+  const captureSlot = getSlotAt(frame, shotIndex)
+  const canvasOverlays = getCanvasOverlays(frame)
   const capturedRef = useRef([])
 
   useEffect(() => {
@@ -96,20 +108,37 @@ export default function CaptureStep({ frame, onDone }) {
             className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
           />
 
-          {frame?.overlays?.[shotIndex] && (
+          {/* 프레임 전체 기준 오버레이 — 캔버스를 이 컷의 슬롯 구멍으로 내다보듯
+              스케일해서, 슬롯에 걸치는 부분만 셀 안에 보이게 한다. */}
+          {canvasOverlays.length > 0 && captureSlot && (
+            <div
+              className="pointer-events-none absolute"
+              style={{
+                left: `${(-captureSlot.x / captureSlot.width) * 100}%`,
+                top: `${(-captureSlot.y / captureSlot.height) * 100}%`,
+                width: `${(layout.canvas.width / captureSlot.width) * 100}%`,
+                height: `${(layout.canvas.height / captureSlot.height) * 100}%`,
+              }}
+            >
+              <OverlayLayer layout={layout} canvasOverlays={canvasOverlays} />
+            </div>
+          )}
+
+          {getShotOverlays(frame, shotIndex).map((o, i) => (
             <img
+              key={`${o.src}-${i}`}
               crossOrigin="anonymous"
-              src={frame.overlays[shotIndex].src}
+              src={o.src}
               alt=""
               draggable="false"
               className="pointer-events-none absolute w-auto max-w-none"
               style={{
-                right: `${frame.overlays[shotIndex].right * 100}%`,
-                bottom: `${frame.overlays[shotIndex].bottom * 100}%`,
-                height: `${frame.overlays[shotIndex].height * 100}%`,
+                right: `${o.right * 100}%`,
+                bottom: `${o.bottom * 100}%`,
+                height: `${o.height * 100}%`,
               }}
             />
-          )}
+          ))}
 
           {status === 'requesting' && <Overlay>카메라를 준비 중이에요...</Overlay>}
           {status === 'error' && (

@@ -10,7 +10,14 @@ import {
   uploadAdminFile,
 } from '../../api/gangmin'
 import { composeFrame } from '../../utils/compose'
-import { DEFAULT_LAYOUT } from '../../data/frames'
+import {
+  DEFAULT_LAYOUT,
+  OVERLAY_DEFAULTS,
+  getCanvasOverlays,
+  getShotCount,
+  getShotOverlays,
+  normalizeOverlays,
+} from '../../data/frames'
 import { nextSortOrder } from './sortOrder'
 import SlotEditor from './SlotEditor'
 import { Spinner } from './ui'
@@ -32,7 +39,17 @@ const EMPTY_FORM = {
   sortOrder: 0,
 }
 
-const NEW_OVERLAY = { src: '', right: 0, bottom: 0, height: 0.8 }
+// 편집 중 state는 anchor/shotIndex/clip을 항상 명시적으로 들고 있는다.
+// (구버전 데이터는 불러올 때 normalizeOverlays가 채워준다)
+function newOverlay(shotIndex) {
+  const isCanvas = shotIndex === null
+  return {
+    ...OVERLAY_DEFAULTS,
+    anchor: isCanvas ? 'canvas' : 'slot',
+    shotIndex: isCanvas ? null : shotIndex,
+    clip: !isCanvas,
+  }
+}
 
 export default function FrameForm({ mode }) {
   const { id } = useParams()
@@ -75,7 +92,7 @@ export default function FrameForm({ mode }) {
             availableUntil: toLocalInput(frame.availableUntil),
             sortOrder: frame.sortOrder,
           })
-          setOverlays(Array.isArray(frame.overlays) ? frame.overlays : [])
+          setOverlays(normalizeOverlays(frame.overlays))
           setLayout(frame.layout ?? freshLayout())
           setFrameImageUrl(frame.frameImageUrl ?? null)
           setStatus('ready')
@@ -124,6 +141,7 @@ export default function FrameForm({ mode }) {
     setSaving(true)
     setError(null)
     try {
+      const savedOverlays = overlays.filter((o) => o.src)
       const payload = {
         name: form.name.trim(),
         categoryId: form.categoryId,
@@ -138,7 +156,8 @@ export default function FrameForm({ mode }) {
           ? new Date(form.availableUntil).toISOString()
           : null,
         sortOrder: Number(form.sortOrder) || 0,
-        overlays: overlays.length > 0 ? overlays : null,
+        // 이미지를 아직 안 올린 빈 줄은 저장하지 않는다
+        overlays: savedOverlays.length > 0 ? savedOverlays : null,
         layout,
         frameImageUrl: frameImageUrl || null,
       }
@@ -321,7 +340,11 @@ export default function FrameForm({ mode }) {
           onChange={setLayout}
         />
 
-        <OverlayEditor overlays={overlays} onChange={setOverlays} />
+        <OverlayEditor
+          overlays={overlays}
+          shotCount={getShotCount({ layout })}
+          onChange={setOverlays}
+        />
 
         <div className="flex gap-2">
           <button
@@ -366,7 +389,9 @@ function LivePreview({ form, overlays, layout, frameImageUrl }) {
             frameImageUrl,
           },
           photoBlobs,
-          overlays,
+          // 미리보기는 샷 i를 슬롯 i에 그대로 넣어 본다
+          overlays: layout.slots.map((_, i) => getShotOverlays({ overlays }, i)),
+          canvasOverlays: getCanvasOverlays({ overlays }),
           filterCss: 'none',
         })
         if (cancelled) return
@@ -517,73 +542,147 @@ function readImageSize(url) {
   })
 }
 
-function OverlayEditor({ overlays, onChange }) {
+function OverlayEditor({ overlays, shotCount, onChange }) {
   function setEntry(i, partial) {
-    onChange(
-      overlays.map((o, idx) => (idx === i ? { ...o, ...partial } : o)),
-    )
-  }
-  function addEntry() {
-    onChange([...overlays, { ...NEW_OVERLAY }])
+    onChange(overlays.map((o, idx) => (idx === i ? { ...o, ...partial } : o)))
   }
   function removeEntry(i) {
     onChange(overlays.filter((_, idx) => idx !== i))
   }
-  function moveEntry(i, dir) {
-    const j = i + dir
-    if (j < 0 || j >= overlays.length) return
+  // 배열 순서가 곧 겹쳐 그리는 순서. 같은 그룹 안에서만 자리를 바꾼다.
+  function swapEntries(i, j) {
     const next = [...overlays]
     ;[next[i], next[j]] = [next[j], next[i]]
     onChange(next)
   }
+  function addEntry(shotIndex) {
+    onChange([...overlays, newOverlay(shotIndex)])
+  }
+
+  const indexed = overlays.map((overlay, i) => ({ overlay, i }))
+  const groups = Array.from({ length: shotCount }, (_, s) => ({
+    key: `shot-${s}`,
+    title: `샷 ${s + 1}`,
+    shotIndex: s,
+    entries: indexed.filter(
+      ({ overlay }) => overlay.anchor !== 'canvas' && overlay.shotIndex === s,
+    ),
+  }))
+  const canvasEntries = indexed.filter(
+    ({ overlay }) => overlay.anchor === 'canvas',
+  )
+  // 촬영 횟수를 줄이면 갈 곳 없는 오버레이가 생긴다. 지울 수 있게 따로 보여준다.
+  const orphanEntries = indexed.filter(
+    ({ overlay }) =>
+      overlay.anchor !== 'canvas' &&
+      !(overlay.shotIndex >= 0 && overlay.shotIndex < shotCount),
+  )
 
   return (
     <section className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
       <header className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-neutral-900">오버레이</h2>
-        <span className="text-xs text-neutral-500">샷 인덱스 순서</span>
+        <span className="text-xs text-neutral-500">
+          {overlays.length}개 · 샷 {shotCount}컷
+        </span>
       </header>
 
       <p className="text-xs text-neutral-500">
-        샷별로 슬롯 우하단에 합성되는 이미지입니다. 보통 8개 정도 (촬영 횟수
-        만큼) 추가합니다.
+        샷마다 이미지를 여러 장 얹을 수 있어요. 기본은 슬롯 안에서 잘리고,
+        <b className="font-medium text-neutral-700"> 슬롯 밖으로 표시</b>를 켜면
+        사진 영역을 넘어 프레임 여백까지 삐져나옵니다.
       </p>
 
-      {overlays.length === 0 && (
-        <p className="rounded-md bg-neutral-50 px-3 py-4 text-center text-xs text-neutral-500">
-          오버레이가 없는 일반 프레임입니다. 필요하면 아래에서 추가하세요.
-        </p>
+      {groups.map((g) => (
+        <OverlayGroup
+          key={g.key}
+          title={g.title}
+          entries={g.entries}
+          onAdd={() => addEntry(g.shotIndex)}
+          onChange={setEntry}
+          onRemove={removeEntry}
+          onSwap={swapEntries}
+        />
+      ))}
+
+      <OverlayGroup
+        title="프레임 전체"
+        hint="슬롯과 무관하게 프레임(캔버스) 기준으로 배치돼요. 모서리 리본·로고처럼 사진과 상관없는 장식용."
+        entries={canvasEntries}
+        onAdd={() => addEntry(null)}
+        onChange={setEntry}
+        onRemove={removeEntry}
+        onSwap={swapEntries}
+      />
+
+      {orphanEntries.length > 0 && (
+        <OverlayGroup
+          title="촬영 횟수 밖"
+          hint="지금 촬영 횟수보다 뒤에 있는 샷에 붙어 있어 합성되지 않아요."
+          entries={orphanEntries}
+          onChange={setEntry}
+          onRemove={removeEntry}
+          onSwap={swapEntries}
+        />
       )}
-
-      <div className="space-y-2">
-        {overlays.map((o, i) => (
-          <OverlayRow
-            key={i}
-            index={i}
-            overlay={o}
-            isFirst={i === 0}
-            isLast={i === overlays.length - 1}
-            onChange={(p) => setEntry(i, p)}
-            onRemove={() => removeEntry(i)}
-            onMoveUp={() => moveEntry(i, -1)}
-            onMoveDown={() => moveEntry(i, 1)}
-          />
-        ))}
-      </div>
-
-      <button
-        type="button"
-        onClick={addEntry}
-        className="w-full rounded-md border border-dashed border-neutral-400 px-3 py-2 text-sm text-neutral-600 hover:border-neutral-600"
-      >
-        + 오버레이 추가
-      </button>
     </section>
   )
 }
 
+function OverlayGroup({
+  title,
+  hint,
+  entries,
+  onAdd,
+  onChange,
+  onRemove,
+  onSwap,
+}) {
+  return (
+    <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <span className="text-xs font-bold text-neutral-700">{title}</span>
+        {entries.length > 0 && (
+          <span className="text-[10px] text-neutral-500">
+            {entries.length}장 · 아래가 위로
+          </span>
+        )}
+      </div>
+      {hint && <p className="mb-2 text-[11px] text-neutral-500">{hint}</p>}
+
+      <div className="space-y-2">
+        {entries.map(({ overlay, i }, pos) => (
+          <OverlayRow
+            key={i}
+            label={`이미지 ${pos + 1}`}
+            overlay={overlay}
+            isFirst={pos === 0}
+            isLast={pos === entries.length - 1}
+            onChange={(p) => onChange(i, p)}
+            onRemove={() => onRemove(i)}
+            onMoveUp={() => onSwap(i, entries[pos - 1].i)}
+            onMoveDown={() => onSwap(i, entries[pos + 1].i)}
+          />
+        ))}
+      </div>
+
+      {onAdd && (
+        <button
+          type="button"
+          onClick={onAdd}
+          className={`w-full rounded-md border border-dashed border-neutral-400 px-3 py-1.5 text-xs text-neutral-600 hover:border-neutral-600 ${
+            entries.length > 0 ? 'mt-2' : ''
+          }`}
+        >
+          + 이미지 추가
+        </button>
+      )}
+    </div>
+  )
+}
+
 function OverlayRow({
-  index,
+  label,
   overlay,
   isFirst,
   isLast,
@@ -594,6 +693,7 @@ function OverlayRow({
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const isCanvas = overlay.anchor === 'canvas'
 
   async function handleFileChange(e) {
     const file = e.target.files?.[0]
@@ -612,18 +712,16 @@ function OverlayRow({
   }
 
   return (
-    <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+    <div className="rounded-lg border border-neutral-200 bg-white p-3">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium text-neutral-700">
-          샷 {index + 1}
-        </span>
+        <span className="text-xs font-medium text-neutral-700">{label}</span>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={onMoveUp}
             disabled={isFirst}
             className="rounded px-1.5 text-xs text-neutral-500 disabled:opacity-30"
-            title="위로"
+            title="뒤로 (아래에 깔기)"
           >
             ↑
           </button>
@@ -632,7 +730,7 @@ function OverlayRow({
             onClick={onMoveDown}
             disabled={isLast}
             className="rounded px-1.5 text-xs text-neutral-500 disabled:opacity-30"
-            title="아래로"
+            title="앞으로 (위에 올리기)"
           >
             ↓
           </button>
@@ -662,7 +760,7 @@ function OverlayRow({
           )}
         </div>
 
-        <div className="flex-1 space-y-1.5">
+        <div className="min-w-0 flex-1 space-y-1.5">
           <input
             type="file"
             accept="image/png,image/jpeg"
@@ -671,6 +769,18 @@ function OverlayRow({
             className="block w-full text-xs"
           />
           {error && <p className="text-xs text-red-600">{error}</p>}
+
+          {!isCanvas && (
+            <label className="flex items-center gap-1.5 text-xs text-neutral-700">
+              <input
+                type="checkbox"
+                checked={!overlay.clip}
+                onChange={(e) => onChange({ clip: !e.target.checked })}
+              />
+              슬롯 밖으로 표시
+            </label>
+          )}
+
           <Slider
             label="오른쪽"
             value={overlay.right}
@@ -694,11 +804,18 @@ function OverlayRow({
           />
         </div>
       </div>
+
+      <p className="mt-1.5 text-[10px] text-neutral-400">
+        {isCanvas
+          ? '프레임 전체 크기 기준 비율'
+          : '슬롯 크기 기준 비율 · 우하단에서의 거리'}
+      </p>
     </div>
   )
 }
 
-function Slider({ label, value, onChange, min = 0, max = 1 }) {
+// 슬라이더 범위를 벗어나는 값도 넣을 수 있게 숫자 입력을 함께 둔다.
+function Slider({ label, value, onChange, min = 0, max = 1, step = 0.01 }) {
   return (
     <label className="flex items-center gap-2">
       <span className="w-10 shrink-0 text-xs text-neutral-600">{label}</span>
@@ -706,15 +823,40 @@ function Slider({ label, value, onChange, min = 0, max = 1 }) {
         type="range"
         min={min}
         max={max}
-        step="0.01"
+        step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="flex-1"
+        className="min-w-0 flex-1"
       />
-      <span className="w-10 shrink-0 text-right font-mono text-[10px] text-neutral-500">
-        {Number(value).toFixed(2)}
-      </span>
+      <NumberField value={value} step={step} onChange={onChange} />
     </label>
+  )
+}
+
+function NumberField({ value, step, onChange }) {
+  const [draft, setDraft] = useState(String(value))
+  const [lastValue, setLastValue] = useState(value)
+
+  // 슬라이더 등 바깥에서 값이 바뀌면 따라간다.
+  // 입력 중인 "0." 같은 중간 상태는 숫자로 같으므로 건드리지 않는다.
+  if (value !== lastValue) {
+    setLastValue(value)
+    if (Number(draft) !== value) setDraft(String(value))
+  }
+
+  return (
+    <input
+      type="number"
+      step={step}
+      value={draft}
+      onChange={(e) => {
+        setDraft(e.target.value)
+        const v = Number(e.target.value)
+        if (e.target.value !== '' && Number.isFinite(v)) onChange(v)
+      }}
+      onBlur={() => setDraft(String(value))}
+      className="w-16 shrink-0 rounded border border-neutral-300 px-1 py-0.5 text-right font-mono text-[11px]"
+    />
   )
 }
 

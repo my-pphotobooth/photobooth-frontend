@@ -1,9 +1,11 @@
 import { getFrameLayout, getFooterY } from '../../data/frames'
+import { OverlayLayer, SlotOverlays } from './OverlayLayer'
 
 export default function PreviewStrip({
   frame,
   photoUrls = [],
   overlays = [],
+  canvasOverlays = [],
   filterCss = 'none',
 }) {
   const layout = getFrameLayout(frame)
@@ -50,22 +52,15 @@ export default function PreviewStrip({
               style={{ filter: filterCss }}
             />
           )}
-          {overlays[i] && (
-            <img
-              crossOrigin="anonymous"
-              src={overlays[i].src}
-              alt=""
-              draggable="false"
-              className="pointer-events-none absolute w-auto max-w-none"
-              style={{
-                right: `${overlays[i].right * 100}%`,
-                bottom: `${overlays[i].bottom * 100}%`,
-                height: `${overlays[i].height * 100}%`,
-              }}
-            />
-          )}
+          <SlotOverlays overlays={overlays[i]} />
         </div>
       ))}
+
+      <OverlayLayer
+        layout={layout}
+        slotOverlays={overlays}
+        canvasOverlays={canvasOverlays}
+      />
 
       {!frame.frameImageUrl && footerY != null && (
         <div

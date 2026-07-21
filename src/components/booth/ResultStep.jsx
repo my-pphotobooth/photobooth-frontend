@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getFilterById } from '../../data/filters'
-import { getFrameLayout } from '../../data/frames'
+import {
+  getFrameLayout,
+  getShotOverlays,
+  getCanvasOverlays,
+} from '../../data/frames'
 import { withChip } from '../../data/basicFrame'
 import { composeFrame } from '../../utils/compose'
 import { uploadPhoto } from '../../api/photos'
@@ -31,8 +35,8 @@ export default function ResultStep({
     async function run() {
       try {
         const selectedBlobs = editResult.selectedIndices.map((i) => photos[i])
-        const selectedOverlays = editResult.selectedIndices.map(
-          (i) => frame.overlays?.[i] ?? null,
+        const selectedOverlays = editResult.selectedIndices.map((i) =>
+          getShotOverlays(frame, i),
         )
         // 기본 프레임이면 선택한 컬러칩 색을 입혀서 합성
         const chip = frame.isBasic
@@ -45,6 +49,7 @@ export default function ResultStep({
           frame: chip ? withChip(frame, chip) : frame,
           photoBlobs: selectedBlobs,
           overlays: selectedOverlays,
+          canvasOverlays: getCanvasOverlays(frame),
           filterCss: filter.css,
         })
         if (cancelled) return

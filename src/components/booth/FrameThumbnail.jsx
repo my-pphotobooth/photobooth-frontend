@@ -1,10 +1,17 @@
-import { getFrameLayout, getFooterY } from '../../data/frames'
+import {
+  getFrameLayout,
+  getFooterY,
+  getShotOverlays,
+  getCanvasOverlays,
+} from '../../data/frames'
+import { OverlayLayer, SlotOverlays } from './OverlayLayer'
 
 export default function FrameThumbnail({ frame, heightClass = 'h-44 sm:h-64' }) {
   const layout = getFrameLayout(frame)
   const { width: cw, height: ch } = layout.canvas
   const pct = (v, total) => `${(v / total) * 100}%`
-  const showOverlays = Array.isArray(frame.overlays) && frame.overlays.length > 0
+  const slotOverlays = layout.slots.map((_, i) => getShotOverlays(frame, i))
+  const canvasOverlays = getCanvasOverlays(frame)
   const footerY = getFooterY(layout)
 
   return (
@@ -22,41 +29,31 @@ export default function FrameThumbnail({ frame, heightClass = 'h-44 sm:h-64' }) 
         />
       )}
 
-      {layout.slots.map((slot, i) => {
-        const overlay = showOverlays ? frame.overlays?.[i] : null
-        return (
-          <div
-            key={i}
-            className="absolute overflow-hidden"
-            style={{
-              left: pct(slot.x, cw),
-              top: pct(slot.y, ch),
-              width: pct(slot.width, cw),
-              height: pct(slot.height, ch),
-              borderRadius:
-                slot.shape === 'ellipse'
-                  ? '50%'
-                  : `${((slot.radius || 0) / slot.width) * 100}%`,
-              backgroundColor: frame.slotColor,
-            }}
-          >
-            {overlay && (
-              <img
-                crossOrigin="anonymous"
-                src={overlay.src}
-                alt=""
-                draggable="false"
-                className="pointer-events-none absolute w-auto max-w-none"
-                style={{
-                  right: `${overlay.right * 100}%`,
-                  bottom: `${overlay.bottom * 100}%`,
-                  height: `${overlay.height * 100}%`,
-                }}
-              />
-            )}
-          </div>
-        )
-      })}
+      {layout.slots.map((slot, i) => (
+        <div
+          key={i}
+          className="absolute overflow-hidden"
+          style={{
+            left: pct(slot.x, cw),
+            top: pct(slot.y, ch),
+            width: pct(slot.width, cw),
+            height: pct(slot.height, ch),
+            borderRadius:
+              slot.shape === 'ellipse'
+                ? '50%'
+                : `${((slot.radius || 0) / slot.width) * 100}%`,
+            backgroundColor: frame.slotColor,
+          }}
+        >
+          <SlotOverlays overlays={slotOverlays[i]} />
+        </div>
+      ))}
+
+      <OverlayLayer
+        layout={layout}
+        slotOverlays={slotOverlays}
+        canvasOverlays={canvasOverlays}
+      />
 
       {!frame.frameImageUrl && footerY != null && (
         <div
