@@ -13,7 +13,15 @@ import { OverlayLayer } from './OverlayLayer'
 const COUNTDOWN_START = 3
 
 export default function CaptureStep({ frame, onDone }) {
-  const { videoRef, status, error, capture } = useCamera()
+  const {
+    videoRef,
+    status,
+    error,
+    capture,
+    mirrored,
+    hasMultipleCameras,
+    switchCamera,
+  } = useCamera()
   // 프레임이 지정한 촬영 횟수(풀). 이 중 슬롯 수만큼 편집 단계에서 고른다.
   const totalShots = getShotCount(frame)
   const [phase, setPhase] = useState('idle')
@@ -105,8 +113,23 @@ export default function CaptureStep({ frame, onDone }) {
             ref={videoRef}
             playsInline
             muted
-            className="absolute inset-0 h-full w-full scale-x-[-1] object-cover"
+            className={`absolute inset-0 h-full w-full object-cover ${
+              mirrored ? 'scale-x-[-1]' : ''
+            }`}
           />
+
+          {hasMultipleCameras && !isRunning && phase !== 'done' && (
+            <button
+              type="button"
+              onClick={switchCamera}
+              disabled={status !== 'ready'}
+              aria-label="전면/후면 카메라 전환"
+              title="전면/후면 카메라 전환"
+              className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur transition hover:bg-black/60 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <CameraSwitchIcon />
+            </button>
+          )}
 
           {/* 프레임 전체 기준 오버레이 — 캔버스를 이 컷의 슬롯 구멍으로 내다보듯
               스케일해서, 슬롯에 걸치는 부분만 셀 안에 보이게 한다. */}
@@ -186,6 +209,34 @@ export default function CaptureStep({ frame, onDone }) {
         )}
       </div>
     </div>
+  )
+}
+
+function CameraSwitchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+      {/* 회전 화살표 링 — 호 끝에 삼각 화살촉을 접선 방향으로 붙인다 */}
+      <path
+        d="M11.54 3.21A8.8 8.8 0 0 1 17.66 18.74"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+      <path d="M14.6 21.31 19.14 20.5 16.18 16.98Z" fill="currentColor" />
+      <path
+        d="M12.46 20.79A8.8 8.8 0 0 1 6.34 5.26"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+      <path d="M9.4 2.69 4.86 3.5 7.82 7.02Z" fill="currentColor" />
+      {/* 카메라 본체 (렌즈는 evenodd 로 뚫는다) */}
+      <path
+        d="M6.2 10.9A1.3 1.3 0 0 1 7.5 9.6h2.4l1.3-1.9h1.6l1.3 1.9h2.4a1.3 1.3 0 0 1 1.3 1.3v4.4a1.3 1.3 0 0 1-1.3 1.3H7.5a1.3 1.3 0 0 1-1.3-1.3ZM14.2 13.1A2.2 2.2 0 1 1 9.8 13.1 2.2 2.2 0 1 1 14.2 13.1Z"
+        fill="currentColor"
+        fillRule="evenodd"
+      />
+    </svg>
   )
 }
 
